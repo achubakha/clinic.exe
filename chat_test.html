@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chat test</title>
+</head>
+<body>
+  <h3>Chat</h3>
+  <div id="log"></div>
+  <div id="bubbles"></div>
+  <input id="box" placeholder="Type a message" size="40">
+  <button id="send">Send</button>
+
+  <h3>Your list</h3>
+  <div id="list"></div>
+
+  <button id="sendSales">Send to sales team</button>
+
+  <div id="quoteForm" style="display:none">
+    <h3>Your contact details</h3>
+    <input id="qName" placeholder="Full name"><br>
+    <input id="qEmail" type="email" placeholder="Email"><br>
+    <input id="qClinic" placeholder="Clinic name"><br>
+    <input id="qNotes" placeholder="Notes (optional)"><br>
+    <button id="submitQuote">Submit request</button>
+  </div>
+  <pre id="quoteResult"></pre>
+
+  <script>
+    let catalog = {};
+    let list = {};
+
+        fetch("/api/catalog")
+      .then(r => r.json())
+      .then(items => {
+        items.forEach(i => catalog[i.id] = i);
+        const types = [...new Set(items.flatMap(i => i.tags || []))];
+        showBubbles(types.map(t => "I'm opening a " + t + " clinic"));
+      });
+
+    function showBubbles(options) {
+      const box = document.getElementById("bubbles");
+      box.innerHTML = "";
+      options.forEach(text => {
+        const b = document.createElement("button");
+        b.textContent = text;
+        b.onclick = () => send(text);
+        box.appendChild(b);
+      });
+    }
+
+    function addLine(who, text) {
+      const p = document.createElement("p");
+      p.textContent = who + ": " + text;
+      document.getElementById("log").appendChild(p);
+    }
+
+    function showList() {
+      const box = document.getElementById("list");
+      box.innerHTML = "";
+      let total = 0;
+      for (const id in list) {
+        const item = catalog[id];
+        if (!item) continue;
+        const cost = item.price * list[id];
+        total += cost;
+        const p = document.createElement("p");
+        p.textContent = item.emoji + " " + item.name + " x" + list[id] + " = $" + cost;
+        box.appendChild(p);
+      }
+      const t = document.createElement("p");
+      t.textContent = "Total: $" + total;
+      box.appendChild(t);
+    }
+
+    async function send(text) {
+      const input = document.getElementById("box");
+      const message = (typeof text === "string" ? text : input.value).trim();        
+      if (!message) return;
+      input.value = "";
+      addLine("You", message);
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({message: message, list: list})
+        });
+        const data = await res.json();
+        list = data.list;
+        addLine("Bot", data.reply);
+        showList();
+            showBubbles(data.suggestions || []);
+      } catch (e) {
+        addLine("Bot", "Something went wrong. Please try again.");
+      }
+    }
+
+    document.getElementById("send").onclick = () => send();
+    document.getElementById("box").addEventListener("keydown", e => {
+      if (e.key === "Enter") send();
+    });
+      document.getElementById("sendSales").onclick = () => {
+      if (Object.keys(list).length === 0) {
+        addLine("Bot", "Your list is empty. Tell me about your clinic first.");
+        return;
+      }
+      document.getElementById("quoteForm").style.display = "block";
+    };
+
+    document.getElementById("submitQuote").onclick = async () => {
+      const name = document.getElementById("qName").value.trim();
+      const email = document.getElementById("qEmail").value.trim();
+      const clinic = document.getElementById("qClinic").value.trim();
+      const notes = document.getElementById("qNotes").value.trim();
+      if (!name || !email || !clinic) {
+        alert("Please fill in your name, email and clinic name.");
+        return;
+      }
+      try {
+        const res = await fetch("/api/quote", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({name, email, clinic, notes, list})
+        });
+        const data = await res.json();
+        document.getElementById("quoteResult").textContent =
+          "Request saved. Reference: " + data.ref + "\n\n" + data.email_text;
+      } catch (e) {
+        document.getElementById("quoteResult").textContent =
+          "Something went wrong. Please try again.";
+      }
+    };
+  </script>
+</body>
+</html>

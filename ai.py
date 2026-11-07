@@ -1,0 +1,73 @@
+import os
+import json
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+
+load_dotenv()
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+CATALOG_FILE = "catalog_test.json"  # change to catalog.json when Sam's is merged
+
+
+def load_catalog():
+    with open(CATALOG_FILE) as f:
+        return {item["id"]: item for item in json.load(f)}
+
+
+def chat_turn(message, current_list):
+    """current_list is a dict: item id -> quantity, e.g. {"slit": 1}"""
+    catalog = load_catalog()
+    menu = [
+        {"id": i["id"], "name": i["name"], "tags": i.get("tags", [])}
+        for i in catalog.values()
+    ]
+    clinic_types = sorted({t for i in catalog.values() for t in i.get("tags", [])})
+    prompt = f"""You are the ClinicFlow planning assistant. You help doctors build an equipment list for a new clinic.
+
+Rules:
+- Use ONLY items from the catalogue, with their exact id.
+- Supported clinic types: {json.dumps(clinic_types)}
+- When the user names a supported clinic type, add the items whose tags match it.
+- If the user names a clinic type that is NOT supported, do not add anything. Reply: "We don't have the equipment for this clinic yet." Then mention the supported types.
+- When the user asks to add, remove, or change the quantity of an item, do it.
+- You ONLY talk about clinic equipment and this equipment list. If the user asks about anything else (weather, jokes, homework, news, and so on), do not answer it. Reply that you can only help with building a clinic equipment list, and ask what kind of clinic they are opening. Use no actions.
+- Keep your reply short and in plain, simple language.
+- Always give 2 to 3 suggestions: short things the user might tap next (under 6 words each), like "Show my list", "Add an item", or "I'm done".
+
+Reply with JSON only, in this shape:
+{{"reply": "your short message", "actions": [{{"op": "add", "id": "item id", "qty": 1}}], "suggestions": ["short option", "short option"]}}
+op can be "add", "remove", or "set_qty".
+
+Catalogue: {json.dumps(menu)}
+Current list (item id: quantity): {json.dumps(current_list)}
+User message: {message}"""
+
+    response = client.models.generate_content(
+        model=os.getenv("MODEL"),
+        contents=prompt,
+        config=types.GenerateContentConfig(response_mime_type="application/json"),
+    )
+
+    try:
+        data = json.loads(response.text)
+    except Exception:
+        return current_list, "Sorry, I didn't catch that. Could you say it again?", []
+
+    new_list = dict(current_list)
+    for action in data.get("actions", []):
+        item_id = action.get("id")
+        if item_id not in catalog:  # ignore anything not in the catalogue
+            continue
+        try:
+            qty = max(1, min(20, int(action.get("qty", 1))))
+        except (TypeError, ValueError):
+            qty = 1
+        op = action.get("op")
+        if op == "add":
+            new_list[item_id] = new_list.get(item_id, 0) + qty
+        elif op == "set_qty":
+            new_list[item_id] = qty
+        elif op == "remove":
+            new_list.pop(item_id, None)
+    return new_list, data.get("reply", ""), data.get("suggestions", [])[:3]
