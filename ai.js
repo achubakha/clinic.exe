@@ -1,0 +1,1 @@
+const clinic_tags = ["gynecology", "family-practice", "urgent-care", "long-term-care", "wound-care", "dental", "optometry", "dermatology", "cardiology", "physiotherapy"];
