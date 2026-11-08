@@ -37,9 +37,9 @@ button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity
 .list-toolbar{display:flex;gap:6px}.icon-btn{height:30px;min-width:31px;padding:0 8px;border:1px solid var(--line);background:white;color:var(--ink);border-radius:8px;font-size:12px;font-weight:750}.icon-btn:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
 .count{font-size:10px;color:var(--muted);background:var(--soft);padding:4px 8px;border-radius:20px;font-weight:800}
 .items{padding:12px;display:flex;flex-direction:column;gap:9px;flex:1;min-height:0;overflow-y:auto}
-.item{position:relative;display:grid;grid-template-columns:65px minmax(0,1fr);gap:10px;border:1px solid var(--line);border-radius:11px;padding:9px;cursor:pointer;transition:.15s;background:white}
+.item{position:relative;display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;border:1px solid var(--line);border-radius:11px;padding:9px;cursor:pointer;transition:.15s;background:white}
 .item:hover{border-color:var(--blue)}
-.thumb{height:65px;width:65px;border-radius:8px;background:var(--soft);object-fit:contain}
+.thumb{height:56px;width:56px;border-radius:8px;background:var(--soft);object-fit:contain}
 .item-main{min-width:0}.item-name{font-size:11px;font-weight:650;line-height:1.35;padding-right:20px}.item-meta{font-size:10px;color:var(--muted);margin-top:3px}
 .item-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:7px}
 .qty {
@@ -95,7 +95,7 @@ button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity
 .primary{border:0;background:var(--blue);color:white;border-radius:9px;padding:9px 13px;font-size:11px;font-weight:650}.primary:hover{background:#183b82}.secondary:hover{border-color:var(--blue);color:var(--blue)}.secondary{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:8px 11px;font-size:10px;font-weight:650}
 .visual-panel .panel-body{display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;overflow-y:auto}
 /* 3D room: small preview in the workspace panel; "Full view" pops the same shell up over the dimmed site */
-.viz-slot{position:relative;flex:none;height:290px}
+.viz-slot{position:relative;flex:none;height:250px}
 .viz-shell{position:absolute;inset:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--soft)}
 .viz-body{flex:1;min-height:0;display:flex}
 .viz-stage{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -264,6 +264,21 @@ body.viz-open .toast{bottom:calc(clamp(12px,4vh,40px) + 70px)}  /* sit above the
 @media(max-width:720px){.compose-row input,.field input,.field textarea,.qty-input{font-size:16px}.modal{padding:16px}.contact-card{padding:17px}}
 @media(max-width:480px){.detail{grid-template-columns:1fr}.detail img{width:100%;height:180px}.intro h1{font-size:22px}.intro p{font-size:14px}}
 @media(pointer:coarse){.qty button{width:32px;height:32px}.icon-btn{height:36px}}
+
+/* ---------- Equipment grouped by checklist zone ---------- */
+.cat-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 0 7px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--ink)}
+.cat-head span:first-child{min-width:0}
+.cat-head span:last-child{flex:none;font-size:12px;font-weight:650;letter-spacing:0;text-transform:none;color:var(--muted)}
+.cat-head:first-child{padding-top:4px}
+/* In the planner list the zone header stays pinned while its items scroll under it */
+.items .cat-head{position:sticky;top:-12px;z-index:2;margin:0 -12px;padding:12px 14px 8px;background:rgba(255,255,255,.95);backdrop-filter:blur(6px)}
+.items .cat-head:not(:first-child){margin-top:8px}
+/* Right panel: how many items each zone has */
+.cat-list{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.cat-row{display:flex;justify-content:space-between;gap:10px}
+.cat-row span:last-child{flex:none;font-weight:700;color:var(--ink)}
+.cat-row.none span:last-child{font-weight:500;color:var(--muted)}
+.plan-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.plan-chips span{padding:3px 8px;border:1px solid var(--line);border-radius:20px;background:#fff;white-space:nowrap}.plan-chips b{color:var(--ink);font-weight:700}
 
 /* ---------- Site-wide motion ---------- */
 /* Header and intro ease in on load */

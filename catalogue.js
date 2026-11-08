@@ -1,9 +1,11 @@
 
 // priority: 1 = essential, 2 = recommended, 3 = optional. per_room: quantity scales with number of rooms.
+// category: Clinical Examination | Medical Devices & Utilities | Consumables & PPE | IT & Administrative (the list is grouped in this order).
 // model3d (optional): id of the 3D model in 3d.html that represents this product in the room planner.
 const catalogue = [
     {
         "id": 1,
+        "category": "Consumables & PPE",
         "name": "Valuemed Professional ValueTest Class 5 / Type 5 Chemical Integrator Strips 250/box",
         "short": "ValueTest Strips",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/images/stencil/960w/products/1202/1475/MDS200600-2__84746.1634429229.jpg?c=1",
@@ -22,6 +24,7 @@ const catalogue = [
     },
     {
         "id": 2,
+        "category": "Consumables & PPE",
         "name": "Valuemed Professional Underpads 17\" x 24\" 50/bag",
         "short": "Valuemed Underpads",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/images/stencil/960w/products/4639/4686/VMUP1724-2__06820.1599131604.jpg?c=1",
@@ -40,6 +43,7 @@ const catalogue = [
     },
     {
         "id": 3,
+        "category": "Medical Devices & Utilities",
         "name": "Welch Allyn ProBP 2000 Plus Digital Blood Pressure Device with BP Averaging and Memory Recall",
         "short": "ProBP 2000 BP Device",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14575/images/18211/Welch_Allyn_ProBP_2000_Plus_Digital_Blood_Pressure_Device_wa-2000plus-a_01__88701.1780603645.386.513.jpg?c=1",
@@ -58,6 +62,7 @@ const catalogue = [
     },
     {
         "id": 4,
+        "category": "Clinical Examination",
         "name": "Riester Duplex 2.0 Adult Stethoscope Black Edition Aluminum",
         "short": "Riester Stethoscope",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14010/images/17137/stetoscop-riester-duplex-2-0__23065.1752616018.386.513.jpg?c=1",
@@ -76,6 +81,7 @@ const catalogue = [
     },
     {
         "id": 5,
+        "category": "Clinical Examination",
         "name": "Welch Allyn 3.5V Diagnostic Set with PanOptic Plus LED Ophthalmoscope",
         "short": "Welch Allyn Diagnostic Set",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13784/images/16730/WA-71-PM3LXES__65926.1745873706.386.513.jpg?c=1",
@@ -93,6 +99,7 @@ const catalogue = [
     },
     {
         "id": 6,
+        "category": "Consumables & PPE",
         "name": "Kerlix AMD Anitmicrobial Dressing Rolls, Sterile",
         "short": "Kerlix Dressing Rolls",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/15004/images/18992/z3332_Kerlix_AMD_Roll_Dressing_4.5_inch_x_4_yard__19691.1792697552.386.513.jpg?c=1",
@@ -110,6 +117,7 @@ const catalogue = [
     },
     {
         "id": 7,
+        "category": "Consumables & PPE",
         "name": "Coloplast Biatain Calcium Alginate Dressing 10 cm x 10cm (4\"x4\"), 10/box",
         "short": "Biatain Alginate Dressing",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14845/images/18726/Coloplast_Biatain_Calcium_Alginate_Dressing_10_cm_x_10cm_COL3710__18815.1788883470.386.513.jpg?c=1",
@@ -126,6 +134,7 @@ const catalogue = [
     },
     {
         "id": 8,
+        "category": "Consumables & PPE",
         "name": "Molyncke Mesorb Ultra Absorbent Dressing, Sterile, 13cm x10cm x10cm, 50/bx",
         "short": "Mesorb Dressing",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14844/images/18725/677001_Mesorb_Ultra_Absorbent_Dressing__90661.1788882489.386.513.jpg?c=1",
@@ -143,6 +152,7 @@ const catalogue = [
     },
     {
         "id": 9,
+        "category": "Consumables & PPE",
         "name": "Valuemed Professional Exam Drape Sheet 36\" x 48\" 2ply Tissue 100/case",
         "short": "Exam Drape Sheets",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/4833/images/4887/VMP753648-2__24915.1599131715.386.513.jpg?c=1",
@@ -161,6 +171,7 @@ const catalogue = [
     },
     {
         "id": 10,
+        "category": "Consumables & PPE",
         "name": "Dukal Gauze Sponge Sterile NW 4x4 4ply 2/pk - 50 pk/box",
         "short": "Dukal Sterile Gauze 4x4",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14459/images/18033/7444_Dukal_Gauze_Sponge_Sterile_NW__72683.1776289725.386.513.jpg?c=1",
@@ -178,6 +189,7 @@ const catalogue = [
     },
     {
         "id": 11,
+        "category": "Consumables & PPE",
         "name": "Valuemed Professional Premium Personal Cleaning Wet Wipes 8\"x 12\" 100/pkg",
         "short": "Cleaning Wet Wipes",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13707/images/16585/Valuemed_Premium_Wet_Wipes_open_VMP901005__11890.1742910945.386.513.jpg?c=1",
@@ -195,6 +207,7 @@ const catalogue = [
     },
     {
         "id": 12,
+        "category": "Consumables & PPE",
         "name": "Valuemed Professional Non-Sterile Economy Gauze 4x4 4ply Non-Woven 2000/case",
         "short": "Economy Gauze 4x4",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/5692/images/5821/VM4X44NS-CASE-2__38419.1631473143.386.513.jpg?c=1",
@@ -213,6 +226,7 @@ const catalogue = [
     },
     {
         "id": 13,
+        "category": "Medical Devices & Utilities",
         "name": "Oscar 2 Ambulatory 24 hour Blood Pressure Monitor",
         "short": "Oscar 2 ABPM",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/8200/images/8350/141-99013300-2__37044.1599133506.386.513.jpg?c=1",
@@ -229,6 +243,7 @@ const catalogue = [
     },
     {
         "id": 14,
+        "category": "Clinical Examination",
         "name": "Almedic Eye Magnet with Nylon Loop in reversable handle, SS, each",
         "short": "Almedic Eye Magnet",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14483/images/18068/alma19-900_LOOP_AND_MAGNET_EYE_IN_REVERS_HNDL_1EA__12673.1776800292.386.513.jpg?c=1",
@@ -245,6 +260,7 @@ const catalogue = [
     },
     {
         "id": 15,
+        "category": "Clinical Examination",
         "name": "Miltex Eye Magnetic and Foreign Body Loop",
         "short": "Miltex Eye Loop",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/10374/images/13676/Eye_Magnetic_Foreign_Loop_MILT18-398__52594.1665684592.386.513.jpg?c=1",
@@ -261,6 +277,7 @@ const catalogue = [
     },
     {
         "id": 16,
+        "category": "Consumables & PPE",
         "name": "Vernacare Sharps Container Yellow Protected Access 13L, each",
         "short": "Sharps Container 13L",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14893/images/18797/51151430_Vernacare_Sharps_Container_Yellow_Protected_Access_13L__04159.1790023851.386.513.jpg?c=1",
@@ -280,6 +297,7 @@ const catalogue = [
     },
     {
         "id": 17,
+        "category": "Consumables & PPE",
         "name": "Medicom SafeBasics Sterilization Pouches 200/box",
         "short": "SafeBasics Steri Pouches",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/15017/images/19013/MEDI99030-2__72449.1599133686.1280.1280__15514.1792812119.386.513.jpg?c=1",
@@ -298,6 +316,7 @@ const catalogue = [
     },
     {
         "id": 18,
+        "category": "Consumables & PPE",
         "name": "Valuemed Professional Class 4 Sterilization Pouches 200/box",
         "short": "Class 4 Steri Pouches",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13385/images/15488/VM610-10-2__52780__19762.1721002058.386.513.jpg?c=1",
@@ -316,6 +335,7 @@ const catalogue = [
     },
     {
         "id": 19,
+        "category": "Clinical Examination",
         "name": "Flight Saddle Stool with Backrest",
         "short": "Saddle Stool w/ Backrest",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13067/images/14759/Flight_Saddle_Stool_with_Backrest_FSSAD-605__19328.1704909227.386.513.jpg?c=1",
@@ -333,6 +353,7 @@ const catalogue = [
     },
     {
         "id": 20,
+        "category": "Clinical Examination",
         "name": "Flight Deluxe Assistant Stool",
         "short": "Deluxe Assistant Stool",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/7164/images/7267/FDS-FSASS-600-2__19113.1652900708.386.513.jpg?c=1",
@@ -349,6 +370,7 @@ const catalogue = [
     },
     {
         "id": 21,
+        "category": "Consumables & PPE",
         "name": "Valuemed Professional Curved Tip (412) Plain Syringes Non Graduated 12cc, Non-Sterile,50/box",
         "short": "Curved Tip Syringes",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13999/images/17115/Valuemed_Curved_Tip_Ultility_Syringe_VM2887_002__67580.1751908498.386.513.jpg?c=1",
@@ -365,6 +387,7 @@ const catalogue = [
     },
     {
         "id": 22,
+        "category": "Clinical Examination",
         "name": "AMG Dressing Jar with Cover, Stainless Steel, 1 qrt/.095L each",
         "short": "Dressing Jar",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14984/images/18961/020-513_AMG_Dressing_Jar_with_Cover_Stainless_Steel_1_qrt_.095L__65892.1792512834.386.513.jpg?c=1",
@@ -382,6 +405,7 @@ const catalogue = [
     },
     {
         "id": 23,
+        "category": "Consumables & PPE",
         "name": "Molyncke Mepitel Ag Contact Layer Antimicrobial Dressing 10 x 12 cm, 10/box",
         "short": "Mepitel Ag Dressing",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14798/images/18656/390090_Molyncke_Mepitel_Ag_Contact_Layer_Antimicrobial_Dressing_10_x_12_cm__42508.1787329013.386.513.jpg?c=1",
@@ -398,6 +422,7 @@ const catalogue = [
     },
     {
         "id": 24,
+        "category": "Consumables & PPE",
         "name": "Coloplast Purilon Dressing Gel .5oz (15 g) Sterile, Latex-Free, 10/box",
         "short": "Purilon Gel",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14797/images/18655/col3900_Coloplast_Purilon_Dressing_Gel_.5oz_1__28306.1787328066.386.513.jpg?c=1",
@@ -414,6 +439,7 @@ const catalogue = [
     },
     {
         "id": 25,
+        "category": "Consumables & PPE",
         "name": "Medicom SafeBasics Cotton Dental Roll, non-sterile, 2000/pkg",
         "short": "Cotton Rolls",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13880/images/16937/206-3554__05541.1748550144.386.513.jpg?c=1",
@@ -429,6 +455,7 @@ const catalogue = [
     },
     {
         "id": 26,
+        "category": "Consumables & PPE",
         "name": "Valuemed Professional Non-Sterile Economy Gauze 2x2 4ply Non-Woven 4000/case",
         "short": "Economy Gauze 2x2",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/5622/images/5752/VM2X24NS-CASE-2__69768.1626316486.386.513.jpg?c=1",
@@ -447,6 +474,7 @@ const catalogue = [
     },
     {
         "id": 27,
+        "category": "Consumables & PPE",
         "name": "Vernacare Sharps Container Yellow Protected Access 25L XL, each",
         "short": "Sharps Container 25L",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14898/images/18806/Vernacare_Sharps_Container_Yellow_Protected_Access_25L_XL_51951430__42147.1790109124.386.513.jpg?c=1",
@@ -464,6 +492,7 @@ const catalogue = [
     },
     {
         "id": 28,
+        "category": "Clinical Examination",
         "name": "Flight Saddle Stool",
         "short": "Flight Saddle Stool",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/9832/images/9919/FDS-FSSAD-600SS1-2__15859.1601384080.386.513.jpg?c=1",
@@ -482,6 +511,7 @@ const catalogue = [
     },
     {
         "id": 29,
+        "category": "Consumables & PPE",
         "name": "Medicom SafeWear Disposable Hipster Jacket, White Frost, 12/bag",
         "short": "SafeWear Hipster Jacket",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13945/images/17037/Medicom_SafeWear_Hipster_Jackets__47606.1750269741.386.513.jpg?c=1",
@@ -499,6 +529,7 @@ const catalogue = [
     },
     {
         "id": 30,
+        "category": "Consumables & PPE",
         "name": "Miltex Stainless Steel Surgical Blades #15 100/box",
         "short": "#15 Surgical Blades",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13061/images/14743/Miltex_Surgical_Blade_Stainless_Steel_No15_4-315__41412.1704489305.386.513.jpg?c=1",
@@ -517,6 +548,7 @@ const catalogue = [
     },
     {
         "id": 31,
+        "category": "Clinical Examination",
         "name": "PDT T705 Scalpel Handle, Adjustable 7 Position",
         "short": "Adjustable Scalpel Handle",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12954/images/14460/PDT_Scalpel_Handle_Asjustable_T705__92529.1693253199.386.513.jpg?c=1",
@@ -534,6 +566,7 @@ const catalogue = [
     },
     {
         "id": 32,
+        "category": "Clinical Examination",
         "name": "Hu-Friedy #5 Straight 1x2 Hemostat, Each",
         "short": "Hu-Friedy Hemostat",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14819/images/18691/H5_5_Straight_1x2_Hemostat__77180.1787950993.386.513.jpg?c=1",
@@ -552,6 +585,7 @@ const catalogue = [
     },
     {
         "id": 33,
+        "category": "Clinical Examination",
         "name": "Hu-Friedy Curved Kelly Perma Sharp Scissors 16 cm (6.25\"), each",
         "short": "Kelly Perma Sharp Scissors",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14781/images/18622/S5001_Hu-Friedy_Curved_Kelly_Perma_Sharp_Scissors__92278.1786991164.386.513.jpg?c=1",
@@ -570,6 +604,7 @@ const catalogue = [
     },
     {
         "id": 34,
+        "category": "Clinical Examination",
         "name": "Miltex Vantage V98-40 BAUMGARTNER Needle Holder, 5-1/2”",
         "short": "Baumgartner Needle Holder",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/10524/images/13623/Miltex_BAUMGARTNER_Needle_Holder_8-40__63614.1664471224.386.513.jpg?c=1",
@@ -588,6 +623,7 @@ const catalogue = [
     },
     {
         "id": 35,
+        "category": "Clinical Examination",
         "name": "Miltex Vantage Castroviejo Needle Holder, 5 5/8\", Straight, Lock",
         "short": "Castroviejo Needle Holder",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/10510/images/13572/Miltex_Vantage_Castroviejo_Needle_Holder_V918-1828__13646.1663016705.386.513.jpg?c=1",
@@ -605,6 +641,7 @@ const catalogue = [
     },
     {
         "id": 36,
+        "category": "Consumables & PPE",
         "name": "Dynarex Disposable Biopsy Punches, Sterile, Mixed Box (5 of Each Size: 2,3,4,5,6mm) 25/box",
         "short": "Biopsy Punches Mixed",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/6290/images/14859/Dynarex_Biopsy_Punches_Sterile__98003.1713189726.386.513.jpg?c=1",
@@ -621,6 +658,7 @@ const catalogue = [
     },
     {
         "id": 37,
+        "category": "Consumables & PPE",
         "name": "Dynarex Disposable Biopsy Punches, Sterile, 6.0mm 25/box",
         "short": "Biopsy Punches 6mm",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/6288/images/14855/Dynarex_Biopsy_Punches_Sterile__68778.1713189573.386.513.jpg?c=1",
@@ -637,6 +675,7 @@ const catalogue = [
     },
     {
         "id": 38,
+        "category": "Consumables & PPE",
         "name": "Pederson Vaginal Speculum, Large, 120 mm x 25 mm, Stainless Steel - Floor Quality",
         "short": "Pederson Speculum Large",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/9630/images/9751/AMG604550-2__53587.1601384013.386.513.jpg?c=1",
@@ -653,6 +692,7 @@ const catalogue = [
     },
     {
         "id": 39,
+        "category": "Consumables & PPE",
         "name": "Pederson Vaginal Speculum, Small, 75mm x 13mm, Stainless Steel - Floor Quality",
         "short": "Pederson Speculum Small",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/6048/images/6155/AMG604530-FL-2__19776.1599132358.386.513.jpg?c=1",
@@ -669,6 +709,7 @@ const catalogue = [
     },
     {
         "id": 40,
+        "category": "Consumables & PPE",
         "name": "3M Micropore Medical Paper Surgical Tape 1/2\" 24/box",
         "short": "Micropore Paper Tape 1/2\"",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/2700/images/14763/3M_Micropore_Surgical_Tape_1-2in_1520-0__45540.1705343784.386.513.jpg?c=1",
@@ -687,6 +728,7 @@ const catalogue = [
     },
     {
         "id": 41,
+        "category": "Consumables & PPE",
         "name": "3M Micropore Medical Paper Surgical Tape 1\" 12/box",
         "short": "Micropore Paper Tape 1\"",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/2597/images/14762/3M_Micropore_Surgical_Tape_1in_1520-1__36535.1705343059.386.513.jpg?c=1",
@@ -705,6 +747,7 @@ const catalogue = [
     },
     {
         "id": 42,
+        "category": "Consumables & PPE",
         "name": "BD Nexiva IV Cath 24Gx0.75\" Closed System Single Port, 20/bx",
         "short": "BD Nexiva IV Catheter 24G",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14102/images/17312/BD383511__53422.1757444202.386.513.jpg?c=1",
@@ -722,6 +765,7 @@ const catalogue = [
     },
     {
         "id": 43,
+        "category": "Consumables & PPE",
         "name": "Jelco Protective Plus-W Safety IV catheter Winged Hub 16G X 1.25\" 50/box",
         "short": "Jelco IV Catheter 16G",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13923/images/17005/222-3082_1__21692.1750111236.386.513.jpg?c=1",
@@ -738,6 +782,7 @@ const catalogue = [
     },
     {
         "id": 44,
+        "category": "Consumables & PPE",
         "name": "Smiths Protective IV Plus-W Cathether Winged 22G x 1\" 50/box",
         "short": "Smiths IV Catheter 22G",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13403/images/15519/blob__13523.1721333482.386.513.jpg?c=1",
@@ -755,6 +800,7 @@ const catalogue = [
     },
     {
         "id": 45,
+        "category": "Consumables & PPE",
         "name": "Sodium Chloride Injection USP 0.9 % Polyamp, 10 mL x 20/box",
         "short": "Saline Polyamp 10mL",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14994/images/18977/0195af01_Hikma_Sodium_Chloride_Injection_USP_0.9_Polyamp_10_ml_x_20_per_box__69195.1792603217.386.513.jpg?c=1",
@@ -773,6 +819,7 @@ const catalogue = [
     },
     {
         "id": 46,
+        "category": "Consumables & PPE",
         "name": "Baxter JF7124 Sodium Chloride Normal Saline NaCl 0.9% Solution 1000ml Bottle. Non Returnable",
         "short": "Saline 1000mL",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14400/images/17937/Baxter_Sodium_Chloride_0.9percent_Normal_Saline_Solution_1000mL_JF7124__08156.1773346102.386.513.jpg?c=1",
@@ -789,6 +836,7 @@ const catalogue = [
     },
     {
         "id": 47,
+        "category": "Consumables & PPE",
         "name": "Baxter JF7123 Saline NaCl 0.9% 500ml for Irrigation Pour Bottle, each. Non Returnable",
         "short": "Saline Irrigation 500mL",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14395/images/17928/JF7123_Saline_NaCl_0.9_500ml_Bottle__31561.1772664726.386.513.jpg?c=1",
@@ -808,6 +856,7 @@ const catalogue = [
     },
     {
         "id": 48,
+        "category": "Consumables & PPE",
         "name": "Metrex CaviWipes Clear Surface Cleaning Wipes, 70% IPA (8\"x7\"), 75/canister",
         "short": "CaviWipes Clear",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14949/images/18896/Metrex_CaviWipes_Clear_Surface_Cleaning_Wipes_70_IPA_15-7110__23688.1791470106.386.513.jpg?c=1",
@@ -827,6 +876,7 @@ const catalogue = [
     },
     {
         "id": 49,
+        "category": "Consumables & PPE",
         "name": "CaviWipes HP Hydrogen Peroxide Disinfecting Wipes",
         "short": "CaviWipes HP",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12740/images/13965/CaviWipes-HP_METRX11-1610__82773.1674248743.386.513.png?c=1",
@@ -846,6 +896,7 @@ const catalogue = [
     },
     {
         "id": 50,
+        "category": "Consumables & PPE",
         "name": "Hu-Friedy Enzymax Spray Gel Ready to Use Instrument Pre-Cleaner 24 oz, each",
         "short": "Enzymax Pre-Cleaner",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/15081/images/19097/IMS-1229_Hu_Friedy_Enzymax_Spray_Gel_Ready_to_Use_Instrument_Pre-Cleaner_24_oz_bottle__25711.1793909262.386.513.jpg?c=1",
@@ -863,6 +914,7 @@ const catalogue = [
     },
     {
         "id": 51,
+        "category": "Consumables & PPE",
         "name": "All-Wipe Instrument Cleaner Pads, 50/package",
         "short": "All-Wipe Instrument Pads",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13305/images/15360/ALL520__09614.1719262102.386.513.jpg?c=1",
@@ -880,6 +932,7 @@ const catalogue = [
     },
     {
         "id": 52,
+        "category": "Consumables & PPE",
         "name": "Relief Pak HotSpot Moist Heat Pack - spine-small size - 10\" x 18\"",
         "short": "HotSpot Heat Pack Spine",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12734/images/13955/relief_pak_11-1314__06417.1673730768.386.513.jpg?c=1",
@@ -896,6 +949,7 @@ const catalogue = [
     },
     {
         "id": 53,
+        "category": "Consumables & PPE",
         "name": "Relief Pak HotSpot Moist Heat Pack - knee-shoulder size - 10\" x 20\"",
         "short": "HotSpot Heat Pack Knee",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12732/images/13952/rapid_relief_11-1316__67788.1673730421.386.513.jpg?c=1",
@@ -912,6 +966,7 @@ const catalogue = [
     },
     {
         "id": 54,
+        "category": "Consumables & PPE",
         "name": "3M 2239 Red Dot Monitoring ECG Electrodes with Micropore Tape Backing, 50/bag",
         "short": "Red Dot ECG Electrodes",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13085/images/15637/2239__54878.1722277697.386.513.PNG?c=1",
@@ -930,6 +985,7 @@ const catalogue = [
     },
     {
         "id": 55,
+        "category": "Medical Devices & Utilities",
         "name": "Welch Allyn Cardiopulmonary ECG Office Cart 105341",
         "short": "ECG Office Cart",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14682/images/18459/Expand_your_Welch_Allyn_Diagnostic_Cardiology_Suite_with_spirometry_modules_with_or_without_syringe_and_the_official_ECG_office_cart_105341._Shop_now__20598.1785363355.386.513.jpg?c=1",
@@ -947,6 +1003,7 @@ const catalogue = [
     },
     {
         "id": 56,
+        "category": "Medical Devices & Utilities",
         "name": "EDAN ECG Cable Lead wire One piece (Snap Style, AHA)",
         "short": "EDAN ECG Lead Wire",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14677/images/18454/Edan_10_lead_ECG_122-01.57.107582__55093.1785267981.386.513.jpg?c=1",
@@ -964,6 +1021,7 @@ const catalogue = [
     },
     {
         "id": 57,
+        "category": "Consumables & PPE",
         "name": "TheraBand Exercise Band Latex 50yds roll",
         "short": "TheraBand Exercise Roll",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12644/images/13804/theraband_Yellow_thin10-1006__08242.1668539595.386.513.jpg?c=1",
@@ -980,6 +1038,7 @@ const catalogue = [
     },
     {
         "id": 58,
+        "category": "Consumables & PPE",
         "name": "Solo Paper Cone Cups 4oz 200/pkg",
         "short": "Solo Paper Cone Cups",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/11830/images/12738/Solo_Paper_Cone_Cups_B18208023__01009.1650472345.386.513.jpg?c=1",
@@ -999,6 +1058,7 @@ const catalogue = [
     },
     {
         "id": 59,
+        "category": "Clinical Examination",
         "name": "Prime Care Bed Model P503",
         "short": "Prime Care Bed P503",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13604/images/16398/P503__40839.1731614672.386.513.jpg?c=1",
@@ -1015,6 +1075,7 @@ const catalogue = [
     },
     {
         "id": 60,
+        "category": "Clinical Examination",
         "name": "AseptiChair Portable Dental Chair - Blue",
         "short": "AseptiChair Dental Chair",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12350/images/13119/AseptiChair_Portable_Dental_Chair_128-ADC-01-BLU__68373.1654890480.386.513.JPG?c=1",
@@ -1031,6 +1092,7 @@ const catalogue = [
     },
     {
         "id": 61,
+        "category": "Clinical Examination",
         "name": "Flight Doctors Stool",
         "short": "Flight Doctors Stool",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/6112/images/6223/FDS-FSDOC600-L12-2__25957.1599132395.386.513.png?c=1",
@@ -1050,6 +1112,7 @@ const catalogue = [
     },
     {
         "id": 62,
+        "category": "Clinical Examination",
         "name": "Kik-Step Stool with Retractable Castors",
         "short": "Kik-Step Stool",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14734/images/18546/kikstep__10210.1786397841.386.513.jpg?c=1",
@@ -1068,6 +1131,7 @@ const catalogue = [
     },
     {
         "id": 63,
+        "category": "Medical Devices & Utilities",
         "name": "Solic Crash Cart w/5 Drawers 26.37\" x 20.86\" x 40.15\" w/ Defibrillator Shelf Multicolour",
         "short": "Solic Crash Cart",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14751/images/18575/nj801_Solic_Crash_Cart_w_5_Drawers_26.37_x_20.86_x_40.15_w_Defibrillator_Shelf_Multicolour__57619.1786550239.386.513.jpg?c=1",
@@ -1086,6 +1150,7 @@ const catalogue = [
     },
     {
         "id": 64,
+        "category": "Medical Devices & Utilities",
         "name": "Stainless Steel Cart with 2 Shelves & 1 Drawer on Top 25.6\"L, 18\"W, 39.6\"H",
         "short": "Stainless Steel Cart",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14742/images/18559/f22_Solic_Cart_SS_2_shelf_1_drawer_top_1__51559.1786466538.386.513.jpg?c=1",
@@ -1105,6 +1170,7 @@ const catalogue = [
     },
     {
         "id": 65,
+        "category": "Medical Devices & Utilities",
         "name": "Medical Utility Cart, PVC with 3 Shelves + 1 Drawer, each",
         "short": "Medical Utility Cart",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12143/images/12842/Solic_Medical_Utility_Cart_with_drawer_201D__34987.1651059149.386.513.jpg?c=1",
@@ -1124,6 +1190,7 @@ const catalogue = [
     },
     {
         "id": 66,
+        "category": "Medical Devices & Utilities",
         "name": "Edan iM3 Vital Signs Monitor with NIBP and SpO2",
         "short": "Edan iM3 Vitals Monitor",
         "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/8164/images/8313/122-IM3NS-2__93900.1599133487.386.513.png?c=1",

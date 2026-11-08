@@ -88,13 +88,18 @@ function itemMarkup(p,delay){
  return `<article class="item${enter?" enter":""}"${enter?` style="--d:${delay}ms"`:""} data-product="${p.id}" tabindex="0" role="button" aria-label="View ${escapeHTML(p.name)} details">
   <button class="item-x" data-action="remove" data-id="${p.id}" aria-label="Remove ${escapeHTML(p.short||p.name)}" title="Remove">×</button>
   ${imageTag(p,"thumb")}
-  <div class="item-main"><div class="item-name">${escapeHTML(p.name)}</div><div class="item-meta">${escapeHTML((p.tags||[]).join(' · '))}</div>
+  <div class="item-main"><div class="item-name">${escapeHTML(p.name)}</div><div class="item-meta">${money(p.price)} each</div>
    <div class="item-bottom"><div class="qty"><button class="${one?"bin":""}" data-action="${one?"remove":"minus"}" data-id="${p.id}" aria-label="${one?"Remove item":"Decrease quantity"}" title="${one?"Remove":"Decrease"}">${one?BIN:"−"}</button>${qtyInput(p,p.qty)}<button data-action="plus" data-id="${p.id}" aria-label="Increase quantity" title="Increase">+</button></div><span class="line-price">${money(p.qty*p.price)}</span></div>
   </div></article>`;
 }
+// Equipment checklist zones, in the order lists are shown (each catalogue product has one).
+const CATEGORIES=["Clinical Examination","Medical Devices & Utilities","Consumables & PPE","IT & Administrative"];
+const byCategory=items=>[...CATEGORIES,"Other"].map(c=>[c,items.filter(p=>(CATEGORIES.includes(p.category)?p.category:"Other")===c)]).filter(([,l])=>l.length);
+const groupTotal=l=>l.reduce((t,p)=>t+p.qty*p.price,0);
+const catHead=(c,l)=>`<div class="cat-head"><span>${escapeHTML(c)}</span><span>${l.length} ${l.length===1?"item":"items"} · ${money(groupTotal(l))}</span></div>`;
 function itemsMarkup(){
  let k=0;  // stagger items sliding in, capped so big lists don't take ages
- return activeItems().map(p=>itemMarkup(p,enterIds.has(p.id)?Math.min(k++,12)*45:null)).join("");
+ return byCategory(activeItems()).map(([c,l])=>catHead(c,l)+l.map(p=>itemMarkup(p,enterIds.has(p.id)?Math.min(k++,12)*45:null)).join("")).join("");
 }
 function setSteps(){
   const steps=["1. Plan clinic","2. Review equipment","3. Contact details","4. Sales handoff"];
@@ -152,9 +157,11 @@ function vizSideClick(e){
  if(b.dataset.viz==="minus"&&p.qty<=1){transition(()=>selected.delete(p.id));toast(`Removed ${name} from your equipment list.`,"Undo",undo);return}
  p.qty=Math.max(1,p.qty+(b.dataset.viz==="plus"?1:-1));renderCurrent();
 }
-function vizInfoMarkup(){
- return `<div class="visual-stats"><div class="stat"><small>Products selected</small><strong>${activeItems().length}</strong></div><div class="stat"><small>Equipment subtotal</small><strong>${money(subtotal())}</strong></div></div>
- <div class="visual-note"><strong>Clinic plan</strong><br>${profileLines().map(([k,v])=>`${k}: ${escapeHTML(v)}`).join("<br>")}</div>`;
+function vizInfoMarkup(){  // checklist coverage per zone, then what we know about the clinic
+ const items=activeItems();
+ return `<div class="visual-note"><strong>Equipment checklist</strong><div class="cat-list">${CATEGORIES.map(c=>{const l=items.filter(p=>p.category===c);
+   return `<div class="cat-row${l.length?"":" none"}"><span>${c}</span><span>${l.length?`${l.length} · ${money(groupTotal(l))}`:"None yet"}</span></div>`}).join("")}</div></div>
+ <div class="visual-note"><strong>Clinic plan</strong><div class="plan-chips">${profileLines().map(([k,v])=>`<span>${k} <b>${v==="Not asked yet"?"—":escapeHTML(v)}</b></span>`).join("")}</div></div>`;
 }
 
 /* 3D room (3d.html) in one iframe. Small: only the 3D view. Full view: the same iframe fills the
@@ -447,7 +454,7 @@ async function handleUser(value){
 }
 function openFinalize(){
  if(!activeItems().length)return;
- $("finalizeItems").innerHTML=activeItems().map(p=>`<div class="finalize-row">${imageTag(p)}<div><strong>${escapeHTML(p.name)}</strong><small>Quantity: ${p.qty} · ${money(p.price)} each</small></div><span class="finalize-price">${money(p.qty*p.price)}</span></div>`).join("");
+ $("finalizeItems").innerHTML=byCategory(activeItems()).map(([c,l])=>catHead(c,l)+l.map(p=>`<div class="finalize-row">${imageTag(p)}<div><strong>${escapeHTML(p.name)}</strong><small>Quantity: ${p.qty} · ${money(p.price)} each</small></div><span class="finalize-price">${money(p.qty*p.price)}</span></div>`).join("")).join("");
  $("finalizeTotal").textContent=money(subtotal());
  $("finalizeModal").classList.add("show");
 }
@@ -472,7 +479,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeProduct();clos
 
 function goContact(){stage="contact";renderContact()}
 function summaryMarkup(){return `<section class="panel contact-summary"><div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">${activeItems().length} selected products</div></div></div>
- <div class="summary-items">${activeItems().length?activeItems().map(p=>`<div class="summary-item">${imageTag(p)}<div><strong>${escapeHTML(p.name)}</strong><small>Quantity: ${p.qty}</small></div><span class="line-price">${money(p.qty*p.price)}</span></div>`).join(""):`<div class="empty">No products selected.</div>`}</div>
+ <div class="summary-items">${activeItems().length?byCategory(activeItems()).map(([c,l])=>catHead(c,l)+l.map(p=>`<div class="summary-item">${imageTag(p)}<div><strong>${escapeHTML(p.name)}</strong><small>Quantity: ${p.qty}</small></div><span class="line-price">${money(p.qty*p.price)}</span></div>`).join("")).join(""):`<div class="empty">No products selected.</div>`}</div>
  <div class="summary-foot"><div class="total-row"><span>Indicative subtotal</span><strong>${money(subtotal())}</strong></div><div class="footer-note">CAD · Before tax, shipping and installation</div></div></section>`}
 function renderContact(){
  setSteps();
@@ -492,7 +499,7 @@ function renderContact(){
 }
 function emailText(){
  const u=userContact;
- return `NEW CLINIC EQUIPMENT QUOTE REQUEST\n\nClinic type: ${clinicType}\n${profileLines().slice(1).map(([k,v])=>`${k}: ${v}`).join("\n")}\nClinic name: ${u.clinic}\nContact: ${u.name}\nEmail: ${u.email}\nPhone: ${u.phone||"Not provided"}\nLocation: ${u.location||"Not provided"}\n\nEQUIPMENT REQUEST\n${activeItems().map(p=>`- ${p.name} | Quantity: ${p.qty} | Reference price: ${money(p.price)} | Line total: ${money(p.qty*p.price)}`).join("\n")||"(No products selected)"}\n\nIllustrative subtotal: ${money(subtotal())}\nAdditional notes: ${u.notes||"None"}\n\nSample product information and prices are for demonstration only. Final pricing and availability require sales-team confirmation.`;
+ return `NEW CLINIC EQUIPMENT QUOTE REQUEST\n\nClinic type: ${clinicType}\n${profileLines().slice(1).map(([k,v])=>`${k}: ${v}`).join("\n")}\nClinic name: ${u.clinic}\nContact: ${u.name}\nEmail: ${u.email}\nPhone: ${u.phone||"Not provided"}\nLocation: ${u.location||"Not provided"}\n\nEQUIPMENT REQUEST\n${byCategory(activeItems()).map(([c,l])=>`${c.toUpperCase()} (${money(groupTotal(l))})\n`+l.map(p=>`- ${p.name} | Quantity: ${p.qty} | Reference price: ${money(p.price)} | Line total: ${money(p.qty*p.price)}`).join("\n")).join("\n\n")||"(No products selected)"}\n\nIllustrative subtotal: ${money(subtotal())}\nAdditional notes: ${u.notes||"None"}\n\nSample product information and prices are for demonstration only. Final pricing and availability require sales-team confirmation.`;
 }
 function renderHandoff(){
  setSteps();
