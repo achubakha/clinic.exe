@@ -12,6 +12,12 @@ def home():
     return send_from_directory(".", "clinic.html")
 
 
+# Only these files are public -- never serve the whole folder (.env holds the API key).
+@app.route("/<any('catalogue.js','index.js','styles.css'):name>")
+def static_file(name):
+    return send_from_directory(".", name)
+
+
 @app.route("/api/catalog")
 def catalog():
     return jsonify(list(load_catalog().values()))
@@ -20,8 +26,8 @@ def catalog():
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json()
-    new_list, reply, suggestions = chat_turn(data.get("message", ""), data.get("list", {}))
-    return jsonify({"reply": reply, "list": new_list, "suggestions": suggestions})
+    new_list, reply, suggestions, clinic_type = chat_turn(data.get("message", ""), data.get("list", {}))
+    return jsonify({"reply": reply, "list": new_list, "suggestions": suggestions, "clinic_type": clinic_type})
 
 @app.route("/chat-test")
 def chat_test():

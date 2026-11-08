@@ -7,19 +7,23 @@ from google.genai import types
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-CATALOG_FILE = "catalog_test.json"  # change to catalog.json when Sam's is merged
+CATALOG_FILE = "catalogue.js"  # same file the browser loads, so there is one catalogue
 
 
 def load_catalog():
+    """catalogue.js is `const catalogue = [...JSON...];` -- read the JSON array out of it.
+    Keys are string ids, because JSON object keys from the browser are strings."""
     with open(CATALOG_FILE) as f:
-        return {item["id"]: item for item in json.load(f)}
+        text = f.read()
+    items = json.loads(text[text.index("["):text.rindex("]") + 1])
+    return {str(item["id"]): item for item in items}
 
 
 def chat_turn(message, current_list):
     """current_list is a dict: item id -> quantity, e.g. {"slit": 1}"""
     catalog = load_catalog()
     menu = [
-        {"id": i["id"], "name": i["name"], "tags": i.get("tags", [])}
+        {"id": i["id"], "name": i["name"], "short": i.get("short", ""), "tags": i.get("tags", [])}
         for i in catalog.values()
     ]
     clinic_types = sorted({t for i in catalog.values() for t in i.get("tags", [])})
@@ -36,27 +40,27 @@ Rules:
 - Always give 2 to 3 suggestions: short things the user might tap next (under 6 words each), like "Show my list", "Add an item", or "I'm done".
 
 Reply with JSON only, in this shape:
-{{"reply": "your short message", "actions": [{{"op": "add", "id": "item id", "qty": 1}}], "suggestions": ["short option", "short option"]}}
+{{"reply": "your short message", "clinic_type": "matching supported clinic type or empty string", "actions": [{{"op": "add", "id": "item id", "qty": 1}}], "suggestions": ["short option", "short option"]}}
 op can be "add", "remove", or "set_qty".
 
 Catalogue: {json.dumps(menu)}
 Current list (item id: quantity): {json.dumps(current_list)}
 User message: {message}"""
 
-    response = client.models.generate_content(
-        model=os.getenv("MODEL"),
-        contents=prompt,
-        config=types.GenerateContentConfig(response_mime_type="application/json"),
-    )
-
     try:
+        response = client.models.generate_content(
+            model=os.getenv("MODEL"),
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        )
         data = json.loads(response.text)
-    except Exception:
-        return current_list, "Sorry, I didn't catch that. Could you say it again?", []
+    except Exception as e:
+        print("AI error:", e, flush=True)
+        return current_list, "Sorry, I couldn't process that right now. Please try again.", [], ""
 
     new_list = dict(current_list)
     for action in data.get("actions", []):
-        item_id = action.get("id")
+        item_id = str(action.get("id"))
         if item_id not in catalog:  # ignore anything not in the catalogue
             continue
         try:
@@ -70,4 +74,5 @@ User message: {message}"""
             new_list[item_id] = qty
         elif op == "remove":
             new_list.pop(item_id, None)
-    return new_list, data.get("reply", ""), data.get("suggestions", [])[:3]
+    clinic_type = data.get("clinic_type") if data.get("clinic_type") in clinic_types else ""
+    return new_list, data.get("reply", ""), data.get("suggestions", [])[:3], clinic_type
