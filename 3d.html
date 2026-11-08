@@ -287,4 +287,229 @@
     push('box',[-w/2-.06,wallH,0],[.15,.06,d],'#f8fbfd',{wall:'left'});
     const wx=Math.min(.6,w/2-1);
     push('box',[wx,1.85,-d/2+.04],[1.6,1.05,.08],'#ffffff',{wall:'back'});
-    push('box'... (30 KB left)
+    push('box',[wx,1.85,-d/2+.09],[1.45,.90,.025],'#b2d5e8',{wall:'back',unlit:true});
+    push('box',[wx,1.85,-d/2+.115],[.045,.92,.025],'#f5fafc',{wall:'back'});
+    push('box',[wx,1.85,-d/2+.115],[1.45,.035,.025],'#f5fafc',{wall:'back'});
+    if(w>4){push('box',[-w/2+.85,1.9,-d/2+.04],[.55,.55,.06],'#f8fafc',{wall:'back'});push('box',[-w/2+.85,1.9,-d/2+.08],[.27,.075,.02],'#6194c9',{wall:'back'});push('box',[-w/2+.85,1.9,-d/2+.08],[.075,.27,.02],'#6194c9',{wall:'back'});}
+    const grid=[];
+    for(let x=-w/2+.5;x<w/2;x+=.5)grid.push(x,.008,-d/2,x,.008,d/2);
+    for(let z=-d/2+.5;z<d/2;z+=.5)grid.push(-w/2,.008,z,w/2,.008,z);
+    lines.push({points:grid,color:hex('#d8e3ec'),grid:true});
+    const dim=[-w/2,.015,d/2+.35,w/2,.015,d/2+.35,-w/2,.015,d/2+.22,-w/2,.015,d/2+.47,w/2,.015,d/2+.22,w/2,.015,d/2+.47,w/2+.35,.015,-d/2,w/2+.35,.015,d/2,w/2+.22,.015,-d/2,w/2+.47,.015,-d/2,w/2+.22,.015,d/2,w/2+.47,.015,d/2];
+    lines.push({points:dim,color:hex('#99aabe')});
+    for(const item of state.instances) {
+      if(!cache.has(item.productId))cache.set(item.productId,model(item.productId));
+      const root=M.multiply(M.translate(item.x,0,item.z),M.ry(item.rotation*Math.PI/180));
+      const defForShadow=ClinicData.catalogue.find(p=>p.id===item.productId);
+      for(const part of cache.get(item.productId))commands.push({...part,matrix:M.multiply(root,part.matrix),instanceId:item.instanceId,footprint:[defForShadow.width,defForShadow.depth],origin:[item.x,item.z],rotation:item.rotation});
+      if(item.instanceId===selected||conflicts.has(item.instanceId)){
+        const def=ClinicData.catalogue.find(p=>p.id===item.productId),pad=.07,ww=def.width/2+pad,dd=def.depth/2+pad;
+        const corners=[[-ww,.02,-dd],[ww,.02,-dd],[ww,.02,dd],[-ww,.02,dd]].map(p=>M.transform(root,p).slice(0,3)),pts=[];
+        for(let i=0;i<4;i++)pts.push(...corners[i],...corners[(i+1)%4]);
+        lines.push({points:pts,color:hex(conflicts.has(item.instanceId)?'#d68130':'#2675df')});
+      }
+    }
+    return {commands,lines};
+  }
+  window.ClinicModels={buildScene};
+})();
+
+
+/* Single source of truth for the room, quantities and positions.
+ * No DOM or rendering code here. All incoming catalogue choices are validated.
+ */
+(function () {
+  'use strict';
+  const {catalogue,aliases}=ClinicData;
+  const clone=v=>JSON.parse(JSON.stringify(v));
+  const round=v=>Math.round(v*1000)/1000;
+  const getDef=id=>catalogue.find(p=>p.id===id);
+  function normalize(items) {
+    if(!Array.isArray(items)||items.length>catalogue.length)throw new Error('Provide an equipment array with at most six product types.');
+    const seen=new Set();let total=0;
+    const result=items.map(row=>{if(!row||typeof row!=='object')throw new Error('Each equipment entry must be an object.');const raw=row.productId??row.id,id=aliases[raw]||raw;
+      if(!getDef(id))throw new Error('Unknown product ID: '+String(raw)+'. Map real catalogue IDs to supported models first.');
+      if(seen.has(id))throw new Error('Duplicate product ID: '+id);seen.add(id);
+      if(!Number.isInteger(row.quantity)||row.quantity<0||row.quantity>8)throw new Error('Quantity must be a whole number from 0 to 8.');total+=row.quantity;return {productId:id,quantity:row.quantity};});
+    if(total>24)throw new Error('This demo supports at most 24 equipment instances in one room.');
+    return result.filter(r=>r.quantity>0);
+  }
+  function dimensions(item){const p=getDef(item.productId),swap=Math.round(item.rotation/90)%2;return swap?{width:p.depth,depth:p.width}:{width:p.width,depth:p.depth};}
+  function clampItem(item,room){const s=dimensions(item),mx=Math.max(0,(room.width-s.width)/2-.06),mz=Math.max(0,(room.depth-s.depth)/2-.06);item.x=round(Math.max(-mx,Math.min(mx,item.x)));item.z=round(Math.max(-mz,Math.min(mz,item.z)));}
+  function overlaps(a,b,padding=0){const aa=dimensions(a),bb=dimensions(b);return Math.abs(a.x-b.x)<(aa.width+bb.width)/2+padding-.001 && Math.abs(a.z-b.z)<(aa.depth+bb.depth)/2+padding-.001;}
+  function findSpot(item,others,room){const def=getDef(item.productId);item.x=def.preferred[0];item.z=def.preferred[1];clampItem(item,room);if(!others.some(o=>overlaps(item,o,.13)))return;
+    const s=dimensions(item),sx=-room.width/2+s.width/2+.15,sz=-room.depth/2+s.depth/2+.15;
+    for(let z=sz;z<=room.depth/2-s.depth/2-.10;z+=.25)for(let x=sx;x<=room.width/2-s.width/2-.10;x+=.25){item.x=round(x);item.z=round(z);if(!others.some(o=>overlaps(item,o,.13)))return;}
+    item.x=0;item.z=0;clampItem(item,room);
+  }
+  class Store {
+    constructor(){this.state={room:{width:6,depth:5,unit:'m'},instances:[],nextId:1};this.history=[];}
+    remember(){this.history.push(clone(this.state));if(this.history.length>30)this.history.shift();}
+    snapshot(){return clone(this.state);}
+    updateEquipment(input,record=true){const items=normalize(input);if(record)this.remember();const retained=[];
+      for(const row of items){const old=this.state.instances.filter(i=>i.productId===row.productId).slice(0,row.quantity);retained.push(...old);}
+      for(const row of items){let n=retained.filter(i=>i.productId===row.productId).length;while(n<row.quantity){const item={instanceId:'equipment-'+this.state.nextId++,productId:row.productId,x:0,z:0,rotation:0};findSpot(item,retained,this.state.room);retained.push(item);n++;}}
+      this.state.instances=retained;return this.snapshot();
+    }
+    quantities(){return catalogue.map(p=>({productId:p.id,quantity:this.state.instances.filter(i=>i.productId===p.id).length})).filter(i=>i.quantity>0);}
+    setRoom(width,depth,record=true){if(typeof width!=='number'||typeof depth!=='number'||!Number.isFinite(width)||!Number.isFinite(depth)||width<3||width>14||depth<3||depth>14)throw new Error('Room width and depth must each be between 3 and 14 metres.');if(record)this.remember();this.state.room={width:round(width),depth:round(depth),unit:'m'};for(const i of this.state.instances)clampItem(i,this.state.room);}
+    move(id,x,z,record=true){if(!Number.isFinite(x)||!Number.isFinite(z))throw new Error('Coordinates must be numbers.');const item=this.state.instances.find(i=>i.instanceId===id);if(!item)return false;if(record)this.remember();item.x=x;item.z=z;clampItem(item,this.state.room);return true;}
+    rotate(id,record=true){const i=this.state.instances.find(v=>v.instanceId===id);if(!i)return false;if(record)this.remember();i.rotation=(i.rotation+90)%360;clampItem(i,this.state.room);return true;}
+    remove(id){const i=this.state.instances.findIndex(v=>v.instanceId===id);if(i<0)return false;this.remember();this.state.instances.splice(i,1);return true;}
+    autoArrange(){this.remember();const placed=[];for(const item of [...this.state.instances].sort((a,b)=>{const aa=dimensions(a),bb=dimensions(b);return bb.width*bb.depth-aa.width*aa.depth;})){findSpot(item,placed,this.state.room);placed.push(item);}}
+    undo(){if(!this.history.length)return false;this.state=this.history.pop();return true;}
+    conflicts(){const ids=new Set(),pairs=[];const a=this.state.instances;for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)if(overlaps(a[i],a[j])){ids.add(a[i].instanceId);ids.add(a[j].instanceId);pairs.push([a[i].instanceId,a[j].instanceId]);}return {ids,pairs};}
+    export(){return {schemaVersion:1,application:'Clinic.exe Room Studio',units:'metres',room:clone(this.state.room),selectedItems:this.quantities(),layout:clone(this.state.instances),notice:'Illustrative models and dimensions only. Not a construction, accessibility, clearance or clinical-safety assessment. No prices or quote submission included.'};}
+    import(data){if(!data||data.schemaVersion!==1||!Array.isArray(data.layout)||data.layout.length>24)throw new Error('Invalid layout file. Use JSON exported by this planner.');
+      const room=data.room;if(!room||room.unit!=='m'||![room.width,room.depth].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=3&&v<=14))throw new Error('Invalid room dimensions or units.');
+      const ids=new Set();const instances=data.layout.map(row=>{if(!row||!getDef(row.productId)||typeof row.instanceId!=='string'||!/^equipment-\d+$/.test(row.instanceId)||ids.has(row.instanceId))throw new Error('Invalid or duplicate equipment instance.');ids.add(row.instanceId);if(![row.x,row.z,row.rotation].every(v=>typeof v==='number'&&Number.isFinite(v))||![0,90,180,270].includes(row.rotation))throw new Error('Invalid equipment coordinates or rotation.');const item={instanceId:row.instanceId,productId:row.productId,x:row.x,z:row.z,rotation:row.rotation};clampItem(item,room);return item;});
+      normalize(catalogue.map(p=>({productId:p.id,quantity:instances.filter(i=>i.productId===p.id).length})));
+      this.remember();this.state={room:{width:room.width,depth:room.depth,unit:'m'},instances,nextId:Math.max(0,...instances.map(i=>Number(i.instanceId.split('-')[1])))+1};
+    }
+  }
+  window.ClinicState={Store,normalize,dimensions,clampItem,overlaps};
+})();
+
+
+/* UI, pointer interaction and public integration API.
+ * The catalogue, JSON input, 3D geometry and exports use the same Store.
+ */
+(function () {
+  'use strict';
+  const paths={
+    logo:'<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor" stroke="none"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',check:'<path d="m5 12 4 4L19 6"/>',
+    cube:'<path d="m12 3 9 5v8l-9 5-9-5V8l9-5zM3 8l9 5 9-5M12 13v8M7.5 5.5l9 5"/>',
+    grid:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h18M10 3v18"/>',
+    code:'<path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/>',
+    upload:'<path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/>',undo:'<path d="M4 10h10a6 6 0 0 1 0 12M4 10l5-5M4 10l5 5" transform="translate(0 -3)"/>',
+    frame:'<path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/>',move:'<path d="M12 2v20M2 12h20M8 6l4-4 4 4M8 18l4 4 4-4M6 8l-4 4 4 4m12-8 4 4-4 4"/>',
+    orbit:'<ellipse cx="12" cy="12" rx="9" ry="5" transform="rotate(-35 12 12)"/><circle cx="12" cy="12" r="2"/><path d="m19 4 2 4-5-1"/>',zoom:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M10 7v6M7 10h6"/>',
+    rotate:'<path d="M20 8a8 8 0 1 0 1 7M20 3v5h-5"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M15 4H5a1 1 0 0 0-1 1v10"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+    camera:'<path d="M3 7h5l2-3h4l2 3h5v13H3z"/><circle cx="12" cy="13" r="4"/>',spark:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2z"/>',
+    close:'<path d="m6 6 12 12M6 18 18 6"/>',cursor:'<path d="m4 3 5 17 4-7 7-4L4 3z"/>',
+    table:'<path d="M3 10h18v5H3zM5 15v5m14-5v5M4 7h6l2 3M5 18h14"/><path d="M4 10V7"/>',
+    chair:'<path d="M8 4h8v9H8zM6 13h12v4H6zM12 17v4M7 21h10M4 11v4m16-4v4"/>',
+    lamp:'<path d="M3 13h18v3H3zM12 16v5M8 21h8M9 13V6h5v4H9M7 6V3h6v3M16 5v8M16 5h3v2"/>',
+    stool:'<ellipse cx="12" cy="8" rx="7" ry="3"/><path d="M5 8v3c0 4 14 4 14 0V8M12 14v7M5 21l7-3 7 3"/>',
+    cabinet:'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M4 12h16M12 3v9M8 7v2m8-2v2M4 16h16M10 14h4m-4 4h4"/>',
+    monitor:'<rect x="4" y="3" width="16" height="12" rx="2"/><path d="M12 15v5M7 21h10M6 9h3l2-3 2 6 2-3h3"/>'
+  };
+  const icon=n=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[n]||paths.cube)+'</svg>';
+  document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
+  const $=id=>document.getElementById(id),store=new ClinicState.Store(),{catalogue,presets}=ClinicData;
+  const embed=new URLSearchParams(location.search).has('embed');if(embed)document.body.classList.add('embed');
+  let selected=null,renderer=null,pointer=null,pinch=null,toastTimer=null,topView=false,saveTimer=null;
+  const touchPoints=new Map(),STORAGE_KEY='clinic-exe-room-studio-v1';
+  function toast(message,error=false){$('toast').textContent=message;$('toast').classList.toggle('error',error);$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3600);}
+  function safe(fn){try{return fn();}catch(error){toast(error.message,true);refresh();return null;}}
+  const getSelected=()=>store.state.instances.find(i=>i.instanceId===selected);
+  const defOf=item=>catalogue.find(p=>p.id===item.productId);
+  function parentMessage(type,detail={}){if(window.parent===window)return;const origin=location.origin==='null'?'*':location.origin;window.parent.postMessage({type,...detail},origin);}
+  function persist(){if(embed)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(store.export()));$('save-text').textContent='Saved on this device';}catch(_){$('save-text').textContent='Session only · export to save';}},120);}
+  function notify(source){const plan=store.export();window.dispatchEvent(new CustomEvent('clinic:selection-changed',{detail:{source,selectedItems:plan.selectedItems,plan}}));parentMessage('clinic:planner:change',{source,selectedItems:plan.selectedItems,plan});}
+  function changed(source='ui'){if(!getSelected())selected=null;refresh();persist();notify(source);}
+  function drawScene(){if(!renderer)return;const conflicts=store.conflicts(),scene=ClinicModels.buildScene(store.state,selected,conflicts.ids);renderer.setScene(scene.commands,scene.lines,store.state.room);}
+  function updateOverlay(){if(!renderer)return;const rect=$('stage').getBoundingClientRect();const position=(id,p)=>{const q=renderer.project(p),el=$(id);el.style.left=(q.x-rect.left)+'px';el.style.top=(q.y-rect.top)+'px';el.style.visibility=q.visible?'visible':'hidden';};const r=store.state.room;position('width-tag',[0,.01,r.depth/2+.51]);position('depth-tag',[r.width/2+.55,.01,0]);const item=getSelected();if(item){position('selected-label',[item.x,defOf(item).height+.25,item.z]);}}
+  function refresh(){
+    const state=store.state,items=store.quantities(),qty=Object.fromEntries(items.map(v=>[v.productId,v.quantity]));
+    for(const p of catalogue){const input=$('qty-'+p.id);if(input&&document.activeElement!==input)input.value=qty[p.id]||0;const card=$('card-'+p.id);if(card)card.classList.toggle('active',!!qty[p.id]);const minus=$('minus-'+p.id),plus=$('plus-'+p.id);if(minus)minus.disabled=!qty[p.id];if(plus)plus.disabled=(qty[p.id]||0)>=8||state.instances.length>=24;}
+    $('room-width').value=state.room.width;$('room-depth').value=state.room.depth;
+    const area=(state.room.width*state.room.depth).toFixed(1).replace(/\.0$/,'');$('area-badge').textContent=area;$('area-summary').textContent=area+' m²';$('count-badge').textContent=state.instances.length;$('items-summary').textContent=state.instances.length+' item'+(state.instances.length===1?'':'s');
+    $('width-tag').textContent=state.room.width.toFixed(1)+' m';$('depth-tag').textContent=state.room.depth.toFixed(1)+' m';
+    const item=getSelected();$('selection-empty').hidden=!!item;$('selection-panel').hidden=!item;$('selected-label').hidden=!item;
+    if(item){const def=defOf(item);$('selected-icon').innerHTML=icon(def.icon);$('selected-name').textContent=def.name;$('selected-label').textContent=def.name;$('selected-id').textContent=def.id+' · '+item.instanceId;$('selected-dimensions').textContent=def.width.toFixed(2)+' × '+def.depth.toFixed(2)+' m';$('position-x').value=item.x;$('position-z').value=item.z;$('rotation-value').textContent='Rotation: '+item.rotation+'°';$('duplicate-button').disabled=(qty[item.productId]||0)>=8||state.instances.length>=24;}
+    const conflict=store.conflicts();$('layout-status').classList.toggle('warning',conflict.pairs.length>0);$('status-title').textContent=conflict.pairs.length?conflict.pairs.length+' footprint overlap'+(conflict.pairs.length===1?'':'s'):'No footprint overlaps';$('status-description').textContent=conflict.pairs.length?'Move the amber-outlined items apart. This is an approximate bounding-box check, not a safety assessment.':'A geometric check only. Operational clearances are not assessed.';
+    $('undo-button').disabled=!store.history.length;drawScene();
+  }
+  function updateEquipment(items,source='api'){store.updateEquipment(items);$('preset').value='custom';changed(source);return store.export();}
+  function quantity(id,value){const items=store.quantities().filter(p=>p.productId!==id);items.push({productId:id,quantity:value});store.updateEquipment(items);$('preset').value='custom';const found=store.state.instances.filter(i=>i.productId===id);if(found.length)selected=found[found.length-1].instanceId;changed();}
+  function applyPreset(name){if(!presets[name])return;store.updateEquipment(presets[name].items);selected=store.state.instances[0]?.instanceId||null;changed('preset');toast(presets[name].name+' loaded. Demo choices, not clinical recommendations.');}
+  function select(id){selected=id;refresh();}
+  function rotate(){if(!getSelected())return;store.rotate(selected);changed();}
+  function remove(){if(!getSelected())return;const name=defOf(getSelected()).name;store.remove(selected);selected=null;$('preset').value='custom';changed();toast(name+' removed. Equipment list updated.');}
+  function download(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  $('catalogue').innerHTML=catalogue.map(p=>'<div class="product-card" id="card-'+p.id+'"><div class="product-icon">'+icon(p.icon)+'</div><div><h3 class="product-name">'+p.name+'</h3><div class="product-meta">'+p.width.toFixed(2)+' × '+p.depth.toFixed(2)+' m · demo</div></div><div class="product-bottom"><span class="quote-tag">Quote required</span><div class="stepper"><button id="minus-'+p.id+'" aria-label="Remove one '+p.name+'">−</button><input id="qty-'+p.id+'" type="number" min="0" max="8" step="1" value="0" aria-label="'+p.name+' quantity"><button id="plus-'+p.id+'" aria-label="Add one '+p.name+'">+</button></div></div></div>').join('');
+  for(const p of catalogue){const count=()=>store.state.instances.filter(i=>i.productId===p.id).length;$('minus-'+p.id).onclick=()=>safe(()=>quantity(p.id,Math.max(0,count()-1)));$('plus-'+p.id).onclick=()=>safe(()=>quantity(p.id,count()+1));$('qty-'+p.id).onchange=e=>{const value=Number(e.target.value);safe(()=>quantity(p.id,value));e.target.value=count();};$('card-'+p.id).onclick=e=>{if(e.target.closest('button,input'))return;const item=store.state.instances.find(i=>i.productId===p.id);if(item)select(item.instanceId);};}
+  $('preset').onchange=e=>safe(()=>applyPreset(e.target.value));
+  function applyRoom(){safe(()=>{store.setRoom(Number($('room-width').value),Number($('room-depth').value));changed();renderer?.home(topView);toast('Room dimensions updated. Equipment kept inside the room.');});}
+  $('apply-room').onclick=applyRoom;for(const id of ['room-width','room-depth'])$(id).addEventListener('keydown',e=>{if(e.key==='Enter')applyRoom();});
+  $('rotate-button').onclick=rotate;$('remove-button').onclick=remove;
+  $('duplicate-button').onclick=()=>safe(()=>{const item=getSelected();if(item)quantity(item.productId,store.state.instances.filter(i=>i.productId===item.productId).length+1);});
+  for(const id of ['position-x','position-z'])$(id).onchange=()=>safe(()=>{if(!getSelected())return;store.move(selected,Number($('position-x').value),Number($('position-z').value));changed();});
+  $('undo-button').onclick=()=>{if(store.undo()){changed('undo');toast('Last layout change undone.');}};
+  $('arrange-button').onclick=()=>{store.autoArrange();changed();toast('Equipment rearranged. Check any remaining overlaps.');};
+  $('export-button').onclick=()=>{download('clinic-room-layout.json',new Blob([JSON.stringify(store.export(),null,2)],{type:'application/json'}));toast('Layout exported. This does not submit a quote.');};
+  $('import-button').onclick=()=>$('import-file').click();$('import-file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>500000)throw new Error('The layout file is too large. Maximum size: 500 KB.');const data=JSON.parse(await file.text());store.import(data);selected=null;$('preset').value='custom';changed('import');renderer?.home(topView);toast('Saved layout imported.');}catch(error){toast(error.message,true);}e.target.value='';};
+  $('snapshot-button').onclick=()=>{if(!renderer)return;renderer.render();$('room-canvas').toBlob(blob=>{if(blob){download('clinic-room-3d.png',blob);toast('3D view saved as PNG. Export JSON to keep the editable layout.');}},'image/png');};
+  $('integration-button').onclick=()=>$('integration-dialog').showModal();$('close-integration').onclick=()=>$('integration-dialog').close();
+  $('apply-json').onclick=()=>safe(()=>{const items=JSON.parse($('equipment-json').value);updateEquipment(items,'integration-test');$('integration-dialog').close();toast('Equipment choices applied to the live 3D room.');});
+  $('copy-api').onclick=async()=>{const text='window.ClinicPlanner.updateEquipment('+ $('equipment-json').value +');';try{await navigator.clipboard.writeText(text);toast('Integration example copied.');}catch(_){$('equipment-json').select();toast('Select and copy the equipment JSON; clipboard permission is unavailable.');}};
+  function setView(top){topView=top;$('view-3d').classList.toggle('active',!top);$('view-top').classList.toggle('active',top);renderer?.home(top);}
+  $('view-3d').onclick=()=>setView(false);$('view-top').onclick=()=>setView(true);$('fit-button').onclick=()=>renderer?.home(topView);
+  $('zoom-in').onclick=()=>{if(renderer){renderer.distance=Math.max(3,renderer.distance*.85);renderer.requestRender();}};$('zoom-out').onclick=()=>{if(renderer){renderer.distance=Math.min(60,renderer.distance/ .85);renderer.requestRender();}};
+  $('grid-toggle').onchange=e=>{if(renderer){renderer.showGrid=e.target.checked;renderer.requestRender();}};$('walls-toggle').onchange=e=>{if(renderer){renderer.showWalls=e.target.checked;renderer.requestRender();}};
+  store.updateEquipment(presets.general.items,false);store.history=[];
+  if(!embed){try{const saved=localStorage.getItem(STORAGE_KEY);if(saved){store.import(JSON.parse(saved));store.history=[];$('preset').value='custom';$('save-text').textContent='Restored from this device';}}catch(_){$('save-text').textContent='Session only · export to save';}}
+  selected=store.state.instances[0]?.instanceId||null;
+  try {renderer=new Clinic3D.Renderer($('room-canvas'));renderer.onRender=updateOverlay;refresh();renderer.home();if(renderer.mode==='software')document.querySelector('.live-pill').innerHTML='<span></span>3D · COMPATIBILITY';}catch(error){
+    // A WebGL driver or shader error must not strand the user on a blank page.
+    try {const oldCanvas=$('room-canvas'),fresh=oldCanvas.cloneNode(false);oldCanvas.replaceWith(fresh);renderer=new Clinic3D.SoftwareRenderer(fresh);renderer.onRender=updateOverlay;refresh();renderer.home();document.querySelector('.live-pill').innerHTML='<span></span>3D · COMPATIBILITY';}
+    catch(fallbackError){renderer=null;$('fatal').hidden=false;$('fatal-error').textContent=fallbackError.message;refresh();}
+  }
+  const canvas=$('room-canvas');
+  canvas.addEventListener('contextmenu',e=>e.preventDefault());
+  canvas.addEventListener('pointerdown',e=>{
+    if(!renderer)return;e.preventDefault();canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);touchPoints.set(e.pointerId,[e.clientX,e.clientY]);
+    if(touchPoints.size===2){const pts=[...touchPoints.values()];pinch={length:Math.hypot(pts[0][0]-pts[1][0],pts[0][1]-pts[1][1]),distance:renderer.distance};pointer=null;return;}
+    const hit=e.button===0&&!e.altKey?renderer.pick(e.clientX,e.clientY,store.state.instances,catalogue):null;
+    if(hit){selected=hit.instanceId;const point=renderer.floorPoint(e.clientX,e.clientY);pointer={id:e.pointerId,type:'item',startX:e.clientX,startY:e.clientY,offset:point?[hit.x-point[0],hit.z-point[2]]:[0,0],remembered:false};refresh();}
+    else {if(e.button===0)selected=null;pointer={id:e.pointerId,type:(e.button===2||e.shiftKey)?'pan':'orbit',x:e.clientX,y:e.clientY};refresh();}canvas.classList.add('dragging');
+  });
+  canvas.addEventListener('pointermove',e=>{
+    if(!renderer)return;
+    if(touchPoints.has(e.pointerId))touchPoints.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pinch&&touchPoints.size===2){const pts=[...touchPoints.values()],length=Math.hypot(pts[0][0]-pts[1][0],pts[0][1]-pts[1][1]);renderer.distance=Math.max(3,Math.min(60,pinch.distance*pinch.length/Math.max(length,1)));renderer.requestRender();return;}
+    if(!pointer||pointer.id!==e.pointerId)return;
+    if(pointer.type==='item'){
+      const item=getSelected(),point=renderer.floorPoint(e.clientX,e.clientY);if(!item||!point)return;if(Math.hypot(e.clientX-pointer.startX,e.clientY-pointer.startY)<3&&!pointer.remembered)return;
+      if(!pointer.remembered){store.remember();pointer.remembered=true;}
+      const snap=v=>$('snap-toggle').checked?Math.round(v*10)/10:v;
+      store.move(selected,snap(point[0]+pointer.offset[0]),snap(point[2]+pointer.offset[1]),false);refresh();
+    } else if(pointer.type==='orbit') {
+      const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;renderer.azimuth-=dx*.008;renderer.elevation=Math.max(.15,Math.min(1.565,renderer.elevation+dy*.006));pointer.x=e.clientX;pointer.y=e.clientY;topView=false;$('view-3d').classList.add('active');$('view-top').classList.remove('active');renderer.requestRender();
+    } else {const a=renderer.floorPoint(pointer.x,pointer.y),b=renderer.floorPoint(e.clientX,e.clientY);if(a&&b){renderer.target[0]=Math.max(-12,Math.min(12,renderer.target[0]+a[0]-b[0]));renderer.target[2]=Math.max(-12,Math.min(12,renderer.target[2]+a[2]-b[2]));}pointer.x=e.clientX;pointer.y=e.clientY;renderer.requestRender();}
+  });
+  function pointerUp(e){touchPoints.delete(e.pointerId);if(pointer?.remembered)changed('drag');if(pointer?.id===e.pointerId)pointer=null;if(touchPoints.size<2)pinch=null;canvas.classList.remove('dragging');if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);}
+  canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',pointerUp);
+  canvas.addEventListener('wheel',e=>{if(!renderer)return;e.preventDefault();renderer.distance=Math.max(3,Math.min(60,renderer.distance*Math.exp(e.deltaY*.001)));renderer.requestRender();},{passive:false});
+  canvas.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='r'){e.preventDefault();rotate();}else if(['Delete','Backspace'].includes(e.key)){e.preventDefault();remove();}else if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();$('undo-button').click();}else if(getSelected()&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const i=getSelected(),step=e.shiftKey?.5:.1;store.move(selected,i.x+(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0),i.z+(e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0));changed('keyboard');}});
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();$('fatal').hidden=false;$('fatal-error').textContent='The graphics context was lost. Export your layout, then refresh the page.';});
+  const api={
+    version:'1.0.0',
+    updateEquipment:items=>updateEquipment(items,'api'),
+    setRoom:room=>{store.setRoom(room.width,room.depth);changed('api');renderer?.home(topView);return store.export();},
+    getState:()=>store.export(),
+    getCatalogue:()=>JSON.parse(JSON.stringify(catalogue)),
+    importLayout:data=>{store.import(data);selected=null;changed('api-import');renderer?.home(topView);return store.export();},
+    selectEquipment:id=>{if(!store.state.instances.some(i=>i.instanceId===id))throw new Error('Unknown equipment instance.');select(id);},
+    getScreenPosition:id=>{const i=store.state.instances.find(x=>x.instanceId===id);if(!i||!renderer)return null;return renderer.project([i.x,Math.min(defOf(i).height*.65,.85),i.z]);},
+    getDiagnostics:()=>({rendering:!!renderer,rendererMode:renderer?.mode||null,webgl:renderer?.gl?renderer.gl.getParameter(renderer.gl.VERSION):null,instances:store.state.instances.length,geometryParts:renderer?.commands.length||0,overlapPairs:store.conflicts().pairs.length,externalDependencies:0})
+  };
+  window.ClinicPlanner=Object.freeze(api);
+  window.updateRoom=api.updateEquipment;
+  window.addEventListener('message',event=>{
+    if(event.source!==window.parent||window.parent===window)return;
+    const sameOrigin=event.origin===location.origin,localFile=location.protocol==='file:'&&event.origin==='null';if(!sameOrigin&&!localFile)return;
+    if(!event.data||event.data.type!=='clinic:equipment:update')return;
+    try{updateEquipment(event.data.items,'parent');parentMessage('clinic:planner:updated',{requestId:event.data.requestId||null,plan:store.export()});}
+    catch(error){parentMessage('clinic:planner:error',{requestId:event.data.requestId||null,error:error.message});toast(error.message,true);}
+  });
+  window.addEventListener('clinic:equipment-update',event=>safe(()=>updateEquipment(event.detail?.items,'event')));
+  parentMessage('clinic:planner:ready',{version:api.version});
+  window.dispatchEvent(new CustomEvent('clinic:planner-ready',{detail:{version:api.version}}));
+  persist();
+})();
+</script>
+</body>
+</html>
