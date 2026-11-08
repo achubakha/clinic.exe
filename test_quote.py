@@ -32,7 +32,7 @@ assert msg["To"] == "owner@gmail.com" and msg["Reply-To"] == "sam@example.com"
 assert msg["Subject"].startswith("New quote request: Example Dental (CF-")
 body = msg.get_content()
 assert item["name"] in body and "Quantity: 50" in body and "not-a-real-id" not in body
-assert f"${item['price'] * 50:,.2f}" in body and "Line one\nLine two" in body and "Practice: Dental" in body
+assert item["category"].upper() in body and f"${item['price'] * 50:,.2f}" in body and "Line one\nLine two" in body and "Practice: Dental" in body
 
 # 2. Not configured yet: still saved, page told email isn't set up.
 with mock.patch.dict(os.environ, {"SMTP_USER": "", "SMTP_PASSWORD": ""}):

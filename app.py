@@ -63,11 +63,15 @@ def quote():
             qty = 1
         cost = round(item["price"] * qty, 2)
         total += cost
-        lines.append({"id": item_id, "name": item["name"], "qty": qty,
+        lines.append({"id": item_id, "name": item["name"], "qty": qty, "category": item.get("category") or "Other",
                       "unit_price": item["price"], "line_total": cost})
     if not lines:
         return jsonify({"error": "Your equipment list is empty."}), 400
     total = round(total, 2)
+    lines.sort(key=lambda l: CATEGORIES.index(l["category"]) if l["category"] in CATEGORIES else len(CATEGORIES))
+    groups = {}  # category -> its lines, in checklist order
+    for l in lines:
+        groups.setdefault(l["category"], []).append(l)
     profile = data.get("profile") if isinstance(data.get("profile"), dict) else {}
     profile = {one_line(k, 40): one_line(v, 200) for k, v in list(profile.items())[:10]}
 
@@ -87,8 +91,11 @@ def quote():
         f"Location: {contact['location'] or 'Not provided'}\n"
         + "".join(f"{k}: {v}\n" for k, v in profile.items())
         + "\nEQUIPMENT REQUEST\n"
-        + "\n".join(f"- {l['name']} | Quantity: {l['qty']} | Unit price: {money(l['unit_price'])}"
-                    f" | Line total: {money(l['line_total'])}" for l in lines)
+        + "\n\n".join(
+            f"{cat.upper()} ({money(sum(l['line_total'] for l in group))})\n"
+            + "\n".join(f"- {l['name']} | Quantity: {l['qty']} | Unit price: {money(l['unit_price'])}"
+                        f" | Line total: {money(l['line_total'])}" for l in group)
+            for cat, group in groups.items())
         + f"\n\nIndicative subtotal: {money(total)} CAD (before tax, shipping and installation)\n"
         f"Additional notes: {notes or 'None'}\n\n"
         "Sample prices only. Final pricing must be confirmed by a sales representative.\n"
@@ -102,6 +109,8 @@ def quote():
     return jsonify({"ref": ref, "emailed": emailed, "total": total})
 
 
+# Same order as the page groups the list in (CATEGORIES in index.js).
+CATEGORIES = ["Clinical Examination", "Medical Devices & Utilities", "Consumables & PPE", "IT & Administrative"]
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
