@@ -17,10 +17,61 @@ function activeItems(){return catalogue.filter(p=>selected.has(p.id))}
 function subtotal(){return activeItems().reduce((sum,p)=>sum+p.qty*p.price,0)}
 function snapshot(){return catalogue.map(p=>({id:p.id,qty:p.qty,selected:selected.has(p.id)}))}
 function pushHistory(){undoStack.push(snapshot());if(undoStack.length>40)undoStack.shift();redoStack=[]}
-function applySnapshot(s){s.forEach(x=>{const p=catalogue.find(p=>p.id===x.id);if(p)p.qty=x.qty;if(x.selected)selected.add(x.id);else selected.delete(x.id)});renderCurrent()}
-function undo(){if(!undoStack.length)return;redoStack.push(snapshot());applySnapshot(undoStack.pop())}
-function redo(){if(!redoStack.length)return;undoStack.push(snapshot());applySnapshot(redoStack.pop())}
-function addMessage(who,text){messages.push({who,text})}
+function applySnapshot(s){s.forEach(x=>{const p=catalogue.find(p=>p.id===x.id);if(p)p.qty=x.qty;if(x.selected)selected.add(x.id);else selected.delete(x.id)})}
+function undo(){if(!undoStack.length)return false;redoStack.push(snapshot());const s=undoStack.pop();toast(describe(transition(()=>applySnapshot(s)),"Undone"),"Redo",redo);return true}
+function redo(){if(!redoStack.length)return false;undoStack.push(snapshot());const s=redoStack.pop();toast(describe(transition(()=>applySnapshot(s)),"Redone"),"Undo",undo);return true}
+const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function addMessage(who,text){messages.push({who,text,animate:who==="bot"&&!reduceMotion})}
+
+/* List changes: apply() mutates state; items leaving slide out first, then the list
+   re-renders with items that came back sliding in. Returns which ids were added/removed. */
+let enterIds=new Set();
+function transition(apply){
+ const before=new Set(selected);apply();
+ const removed=[...before].filter(id=>!selected.has(id)),added=[...selected].filter(id=>!before.has(id));
+ slideOut(removed).then(()=>{enterIds=new Set(added);renderCurrent();enterIds=new Set()});
+ return {added,removed};
+}
+function slideOut(ids){
+ const els=ids.map(id=>document.querySelector(`.item[data-product="${id}"]`)).filter(Boolean);
+ if(reduceMotion||!els.length)return Promise.resolve();
+ return Promise.all(els.map(el=>{
+  const h=el.offsetHeight+"px";el.style.overflow="hidden";
+  return el.animate([
+   {opacity:1,transform:"none",height:h},
+   {opacity:0,transform:"translateX(-40px)",height:h,offset:.55},
+   {opacity:0,transform:"translateX(-40px)",height:"0px",paddingTop:"0px",paddingBottom:"0px",borderWidth:"0px",marginBottom:"-9px"}
+  ],{duration:360,easing:"ease-in-out",fill:"forwards"}).finished.catch(()=>{});
+ }));
+}
+const shortName=id=>{const p=catalogue.find(x=>x.id===id);return p?(p.short||p.name):"item"};
+function describe({added,removed},label){
+ const n=ids=>ids.length===1?shortName(ids[0]):`${ids.length} items`;
+ if(added.length&&!removed.length)return `${label}: ${n(added)} ${added.length===1?"is":"are"} back on your list.`;
+ if(removed.length&&!added.length)return `${label}: ${n(removed)} removed from your list.`;
+ return `${label}: your last change.`;
+}
+const toastEl=document.createElement("div");toastEl.className="toast";toastEl.setAttribute("role","status");toastEl.setAttribute("aria-live","polite");document.body.appendChild(toastEl);
+let toastTimer;
+function toast(text,actionLabel,action){
+ toastEl.innerHTML=`<span>${escapeHTML(text)}</span>${actionLabel?`<button type="button">${escapeHTML(actionLabel)}</button>`:""}`;
+ if(actionLabel)toastEl.querySelector("button").onclick=()=>{toastEl.classList.remove("show");action()};
+ toastEl.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove("show"),5000);
+}
+const BIN='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+function itemMarkup(p,delay){
+ const one=p.qty<=1,enter=delay!==null;
+ return `<article class="item${enter?" enter":""}"${enter?` style="--d:${delay}ms"`:""} data-product="${p.id}" tabindex="0" role="button" aria-label="View ${escapeHTML(p.name)} details">
+  <button class="item-x" data-action="remove" data-id="${p.id}" aria-label="Remove ${escapeHTML(p.short||p.name)}" title="Remove">×</button>
+  ${imageTag(p,"thumb")}
+  <div class="item-main"><div class="item-name">${escapeHTML(p.name)}</div><div class="item-meta">${escapeHTML((p.tags||[]).join(' · '))}</div>
+   <div class="item-bottom"><div class="qty"><button class="${one?"bin":""}" data-action="${one?"remove":"minus"}" data-id="${p.id}" aria-label="${one?"Remove item":"Decrease quantity"}" title="${one?"Remove":"Decrease"}">${one?BIN:"−"}</button><span>${p.qty}</span><button data-action="plus" data-id="${p.id}" aria-label="Increase quantity" title="Increase">+</button></div><span class="line-price">${money(p.qty*p.price)}</span></div>
+  </div></article>`;
+}
+function itemsMarkup(){
+ let k=0;  // stagger items sliding in, capped so big lists don't take ages
+ return activeItems().map(p=>itemMarkup(p,enterIds.has(p.id)?Math.min(k++,12)*45:null)).join("");
+}
 function setSteps(){
   const steps=["1. Plan clinic","2. Review equipment","3. Contact details","4. Sales handoff"];
   const idx=stage==="clinic"?0:stage==="contact"?2:stage==="handoff"?3:1;
@@ -31,12 +82,7 @@ function listMarkup(){
   return `<section class="panel list-panel">
     <div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">Click an item to view details</div></div><span class="count">${activeItems().length} ITEMS</span></div>
     <div class="list-toolbar" style="padding:10px 12px 0"><button class="icon-btn" id="undoBtn" title="Undo" ${undoStack.length?"":"disabled"}>Undo</button><button class="icon-btn" id="redoBtn" title="Redo" ${redoStack.length?"":"disabled"}>Redo</button></div>
-    <div class="items">${activeItems().length?activeItems().map(p=>`<article class="item" data-product="${p.id}" tabindex="0" role="button" aria-label="View ${escapeHTML(p.name)} details">
-      ${imageTag(p,"thumb")}
-      <div class="item-main"><div class="item-name">${escapeHTML(p.name)}</div><div class="item-meta">${escapeHTML((p.tags||[]).join(' · '))}</div>
-        <div class="item-bottom"><div class="qty"><button data-action="minus" data-id="${p.id}" aria-label="Decrease quantity">−</button><span>${p.qty}</span><button data-action="plus" data-id="${p.id}" aria-label="Increase quantity">+</button></div><span class="line-price">${money(p.qty*p.price)}</span></div>
-        <button class="remove" data-action="remove" data-id="${p.id}">Remove item</button>
-      </div></article>`).join(""):`<div class="empty">Your equipment list is empty.<br>Describe your clinic to get started.</div>`}</div>
+    <div class="items">${activeItems().length?itemsMarkup():`<div class="empty">Your equipment list is empty.<br>Describe your clinic to get started.</div>`}</div>
     <div class="list-footer"><div class="total-row"><span>Indicative subtotal</span><strong>${money(subtotal())}</strong></div><div class="footer-note">CAD · Before tax, shipping and installation</div><button class="primary" id="finalizeList" style="width:100%;margin-top:12px" ${activeItems().length ? "" : "disabled"}>Finalize list</button></div>
   </section>`;
 }
@@ -49,7 +95,7 @@ function visualMarkup(){
 }
 function chatMarkup(){
  return `<section class="panel chat-panel"><div class="panel-head"><div><div class="panel-title">AI planning assistant</div><div class="panel-sub">Ask questions or make changes to your equipment list</div></div><span class="chat-head-status"><span class="dot"></span> AI assistant</span></div>
- <div class="messages" id="messages">${messages.map(m=>`<div class="msg ${m.who==="user"?"user":""}"><div class="avatar">${m.who==="user"?"YOU":"AI"}</div><div class="bubble-wrap"><div class="msg-label">${m.who==="user"?"You":"Clinic.exe"}</div><div class="bubble">${escapeHTML(m.text)}</div></div></div>`).join("")}</div>
+ <div class="messages" id="messages">${messages.map((m,i)=>`<div class="msg ${m.who==="user"?"user":""}"><div class="bubble-wrap"><div class="msg-label">${m.who==="user"?"You":"Clinic.exe"}</div>${m.thinking?`<div class="bubble thinking" aria-label="Assistant is typing"><span></span><span></span><span></span></div>`:m.animate?`<div class="bubble typing" data-type="${i}"></div>`:`<div class="bubble">${escapeHTML(m.text)}</div>`}</div></div>`).join("")}</div>
  <div class="composer"><div class="quick" id="quick"></div><form class="compose-row" id="chatForm"><input id="chatInput" autocomplete="off" placeholder="${stage==="clinic"?"e.g. I am opening an optometry clinic":"e.g. Remove the Almedic Eye Magnet"}" required><button class="primary" type="submit">Send</button></form></div></section>`;
 }
 function bindList(){
@@ -62,18 +108,41 @@ function bindList(){
  });
  document.querySelectorAll("[data-action]").forEach(btn=>btn.addEventListener("click",e=>{
   e.stopPropagation();const p=catalogue.find(x=>String(x.id)===btn.dataset.id);if(!p)return;
+  if(btn.dataset.action==="remove"){
+   if(!selected.has(p.id))return;
+   pushHistory();transition(()=>selected.delete(p.id));
+   toast(`Removed ${p.short||p.name} from your list.`,"Undo",undo);return;
+  }
   pushHistory();
   if(btn.dataset.action==="plus")p.qty++;
-  if(btn.dataset.action==="minus"){p.qty=Math.max(1,p.qty-1)}
-  if(btn.dataset.action==="remove")selected.delete(p.id);
+  if(btn.dataset.action==="minus")p.qty=Math.max(1,p.qty-1);
   renderCurrent();
  }));
 }
+let lastQuickKey="";
 function renderChat(){
+ const keep=document.querySelector(".items")?.scrollTop||0;  // re-render shouldn't jump the list to the top
  setSteps();$("mainArea").innerHTML=`<div class="workspace">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;
+ const items=document.querySelector(".items");if(items)items.scrollTop=keep;
  const msg=$("messages");msg.scrollTop=msg.scrollHeight;bindList();
  $("chatForm").addEventListener("submit",e=>{e.preventDefault();const v=$("chatInput").value.trim();if(v)handleUser(v)});
- const quick=$("quick");(stage==="clinic"&&!suggestions.length?clinicTypes.slice(0,4).map(t=>`I'm opening a ${t.replace(/-/g," ")} clinic`):[...suggestions,"Undo last change"]).forEach(v=>{const b=document.createElement("button");b.textContent=v;b.onclick=()=>handleUser(v);quick.appendChild(b)});
+ const options=stage==="clinic"&&!suggestions.length?clinicTypes.slice(0,4).map(t=>`I'm opening a ${t.replace(/-/g," ")} clinic`):[...suggestions,"Undo last change"];
+ const quick=$("quick"),key=JSON.stringify(options),typingEl=document.querySelector("[data-type]");
+ quick.classList.toggle("animate",key!==lastQuickKey);lastQuickKey=key;  // only pop in when the options are new
+ quick.classList.toggle("wait",!!typingEl||busy);                        // ...and after the reply has finished typing
+ options.forEach((v,i)=>{const b=document.createElement("button");b.textContent=v;b.style.setProperty("--i",i);b.onclick=()=>handleUser(v);quick.appendChild(b)});
+ if(typingEl)typeOut(typingEl,messages[typingEl.dataset.type],()=>quick.classList.remove("wait"));
+}
+// ChatGPT-style reveal, word by word. If the chat re-renders mid-way, the full text is shown instead.
+function typeOut(el,m,done){
+ m.animate=false;
+ const words=m.text.split(/(\s+)/);let i=0;
+ const t=setInterval(()=>{
+  if(!el.isConnected){clearInterval(t);return}
+  el.textContent+=words.slice(i,i+2).join("");i+=2;
+  const box=$("messages");if(box)box.scrollTop=box.scrollHeight;
+  if(i>=words.length){clearInterval(t);el.classList.remove("typing");done()}
+ },35);
 }
 function renderCurrent(){if(stage==="contact")renderContact();else if(stage==="handoff")renderHandoff();else renderChat()}
 let suggestions=[],busy=false,profile={};
@@ -91,28 +160,32 @@ async function handleUser(value){
  if(busy)return;
  addMessage("user",value);
  // Page navigation and history stay local; everything else goes to the AI.
- if(/^\s*undo/i.test(value)){undo();addMessage("bot","I reversed the last equipment-list change.");renderChat();return}
- if(/^\s*redo/i.test(value)){redo();addMessage("bot","I restored the last undone equipment-list change.");renderChat();return}
+ if(/^\s*undo/i.test(value)){addMessage("bot",undoStack.length?"I reversed the last equipment-list change.":"There's nothing to undo yet.");if(!undo())renderChat();return}
+ if(/^\s*redo/i.test(value)){addMessage("bot",redoStack.length?"I restored the last undone equipment-list change.":"There's nothing to redo.");if(!redo())renderChat();return}
  if(/^\s*(continue|next step|looks good|i'?m done|confirm)/i.test(value)&&activeItems().length){goContact();return}
- const lastReply=[...messages].reverse().find(m=>m.who==="bot")?.text||"";
- busy=true;addMessage("bot","Thinking…");renderChat();
+ const lastReply=[...messages].reverse().find(m=>m.who==="bot"&&!m.thinking)?.text||"";
+ busy=true;messages.push({who:"bot",thinking:true});renderChat();
  try{
   const list=Object.fromEntries(activeItems().map(p=>[String(p.id),p.qty]));
   const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,list,profile,last_reply:lastReply})});
   if(!res.ok)throw new Error(res.status);
   const data=await res.json();
-  messages.pop();pushHistory();selected.clear();
-  catalogue.forEach(p=>{const q=data.list?.[String(p.id)];if(q){p.qty=q;selected.add(p.id)}else p.qty=1});
+  messages.pop();
+  if(JSON.stringify(list)!==JSON.stringify(data.list||{}))pushHistory();  // only list changes are undoable
   profile=data.profile||profile;
   if(profile.clinic_type)clinicType=titleCase(profile.clinic_type)+" Clinic";
-  if(selected.size&&stage==="clinic")stage="review";
   suggestions=data.suggestions||[];
-  addMessage("bot",data.reply||"Done.");
+  addMessage("bot",data.reply||"Done.");busy=false;
+  transition(()=>{
+   selected.clear();
+   catalogue.forEach(p=>{const q=data.list?.[String(p.id)];if(q){p.qty=q;selected.add(p.id)}else p.qty=1});
+   if(selected.size&&stage==="clinic")stage="review";
+  });
  }catch(e){
   messages.pop();
   addMessage("bot","I couldn't reach the assistant. Start the server with “python3 app.py” and open http://localhost:5001.");
+  busy=false;renderChat();
  }
- busy=false;renderChat();
 }
 function openFinalize(){
  if(!activeItems().length)return;
