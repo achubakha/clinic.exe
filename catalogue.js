@@ -1,3 +1,5 @@
+
+// priority: 1 = essential, 2 = recommended, 3 = optional. per_room: quantity scales with number of rooms.
 const catalogue = [
     {
         "id": 1,
@@ -13,7 +15,9 @@ const catalogue = [
             "optometry",
             "family-practice",
             "urgent-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 2,
@@ -29,7 +33,9 @@ const catalogue = [
             "wound-care",
             "family-practice",
             "urgent-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": true
     },
     {
         "id": 3,
@@ -45,7 +51,9 @@ const catalogue = [
             "cardiology",
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 4,
@@ -61,7 +69,9 @@ const catalogue = [
             "cardiology",
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": true
     },
     {
         "id": 5,
@@ -76,7 +86,9 @@ const catalogue = [
             "family-practice",
             "optometry",
             "urgent-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": true
     },
     {
         "id": 6,
@@ -91,7 +103,9 @@ const catalogue = [
             "wound-care",
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 7,
@@ -105,7 +119,9 @@ const catalogue = [
         "tags": [
             "wound-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 8,
@@ -120,7 +136,9 @@ const catalogue = [
             "wound-care",
             "long-term-care",
             "urgent-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 9,
@@ -136,7 +154,9 @@ const catalogue = [
             "urgent-care",
             "wound-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": true
     },
     {
         "id": 10,
@@ -151,7 +171,9 @@ const catalogue = [
             "wound-care",
             "urgent-care",
             "family-practice"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 11,
@@ -166,7 +188,9 @@ const catalogue = [
             "long-term-care",
             "family-practice",
             "wound-care"
-        ]
+        ],
+        "priority": 3,
+        "per_room": true
     },
     {
         "id": 12,
@@ -182,7 +206,9 @@ const catalogue = [
             "family-practice",
             "dental",
             "urgent-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 13,
@@ -196,7 +222,9 @@ const catalogue = [
         "tags": [
             "cardiology",
             "family-practice"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 14,
@@ -210,7 +238,9 @@ const catalogue = [
         "tags": [
             "optometry",
             "urgent-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 15,
@@ -224,7 +254,9 @@ const catalogue = [
         "tags": [
             "optometry",
             "urgent-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 16,
@@ -241,7 +273,9 @@ const catalogue = [
             "dental",
             "wound-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": true
     },
     {
         "id": 17,
@@ -257,7 +291,9 @@ const catalogue = [
             "family-practice",
             "optometry",
             "urgent-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 18,
@@ -273,7 +309,9 @@ const catalogue = [
             "family-practice",
             "optometry",
             "urgent-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 19,
@@ -287,7 +325,9 @@ const catalogue = [
         "tags": [
             "dental",
             "optometry"
-        ]
+        ],
+        "priority": 2,
+        "per_room": true
     },
     {
         "id": 20,
@@ -300,7 +340,9 @@ const catalogue = [
         "link": "https://www.valuemed.ca/flight-deluxe-assistant-stool/",
         "tags": [
             "dental"
-        ]
+        ],
+        "priority": 3,
+        "per_room": true
     },
     {
         "id": 21,
@@ -314,7 +356,9 @@ const catalogue = [
         "tags": [
             "dental",
             "wound-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 22,
@@ -329,7 +373,9 @@ const catalogue = [
             "wound-care",
             "family-practice",
             "urgent-care"
-        ]
+        ],
+        "priority": 3,
+        "per_room": false
     },
     {
         "id": 23,
@@ -343,7 +389,9 @@ const catalogue = [
         "tags": [
             "wound-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 24,
@@ -357,7 +405,9 @@ const catalogue = [
         "tags": [
             "wound-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 25,
@@ -370,7 +420,9 @@ const catalogue = [
         "link": "https://www.valuemed.ca/products/medicom-safebasics-cotton-dental-roll-non-sterile-2000-pkg/",
         "tags": [
             "dental"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 26,
@@ -386,7 +438,9 @@ const catalogue = [
             "family-practice",
             "wound-care",
             "urgent-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 27,
@@ -401,7 +455,9 @@ const catalogue = [
             "urgent-care",
             "family-practice",
             "long-term-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 28,
@@ -416,7 +472,9 @@ const catalogue = [
             "dental",
             "optometry",
             "family-practice"
-        ]
+        ],
+        "priority": 3,
+        "per_room": true
     },
     {
         "id": 29,
@@ -431,7 +489,9 @@ const catalogue = [
             "dental",
             "family-practice",
             "urgent-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 30,
@@ -447,7 +507,9 @@ const catalogue = [
             "urgent-care",
             "dermatology",
             "wound-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 31,
@@ -462,7 +524,9 @@ const catalogue = [
             "dental",
             "dermatology",
             "family-practice"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 32,
@@ -478,7 +542,9 @@ const catalogue = [
             "urgent-care",
             "wound-care",
             "dermatology"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 33,
@@ -494,7 +560,9 @@ const catalogue = [
             "urgent-care",
             "wound-care",
             "dermatology"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 34,
@@ -510,7 +578,9 @@ const catalogue = [
             "urgent-care",
             "wound-care",
             "dermatology"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 35,
@@ -525,7 +595,9 @@ const catalogue = [
             "optometry",
             "dermatology",
             "family-practice"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 36,
@@ -539,7 +611,9 @@ const catalogue = [
         "tags": [
             "dermatology",
             "family-practice"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 37,
@@ -553,7 +627,9 @@ const catalogue = [
         "tags": [
             "dermatology",
             "family-practice"
-        ]
+        ],
+        "priority": 3,
+        "per_room": false
     },
     {
         "id": 38,
@@ -567,7 +643,9 @@ const catalogue = [
         "tags": [
             "gynecology",
             "family-practice"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 39,
@@ -581,7 +659,9 @@ const catalogue = [
         "tags": [
             "gynecology",
             "family-practice"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 40,
@@ -597,7 +677,9 @@ const catalogue = [
             "family-practice",
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 41,
@@ -613,7 +695,9 @@ const catalogue = [
             "family-practice",
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 3,
+        "per_room": false
     },
     {
         "id": 42,
@@ -628,7 +712,9 @@ const catalogue = [
             "urgent-care",
             "long-term-care",
             "family-practice"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 43,
@@ -642,7 +728,9 @@ const catalogue = [
         "tags": [
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 44,
@@ -657,7 +745,9 @@ const catalogue = [
             "urgent-care",
             "long-term-care",
             "family-practice"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 45,
@@ -673,7 +763,9 @@ const catalogue = [
             "family-practice",
             "wound-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 46,
@@ -687,7 +779,9 @@ const catalogue = [
         "tags": [
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 47,
@@ -704,7 +798,9 @@ const catalogue = [
             "family-practice",
             "long-term-care",
             "optometry"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 48,
@@ -721,7 +817,9 @@ const catalogue = [
             "dental",
             "optometry",
             "physiotherapy"
-        ]
+        ],
+        "priority": 1,
+        "per_room": true
     },
     {
         "id": 49,
@@ -738,7 +836,9 @@ const catalogue = [
             "dental",
             "long-term-care",
             "optometry"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 50,
@@ -753,7 +853,9 @@ const catalogue = [
             "dental",
             "family-practice",
             "urgent-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 51,
@@ -768,7 +870,9 @@ const catalogue = [
             "dental",
             "family-practice",
             "urgent-care"
-        ]
+        ],
+        "priority": 3,
+        "per_room": false
     },
     {
         "id": 52,
@@ -782,7 +886,9 @@ const catalogue = [
         "tags": [
             "physiotherapy",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 53,
@@ -796,7 +902,9 @@ const catalogue = [
         "tags": [
             "physiotherapy",
             "long-term-care"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 54,
@@ -812,7 +920,9 @@ const catalogue = [
             "family-practice",
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 55,
@@ -826,7 +936,9 @@ const catalogue = [
         "tags": [
             "cardiology",
             "family-practice"
-        ]
+        ],
+        "priority": 2,
+        "per_room": false
     },
     {
         "id": 56,
@@ -841,7 +953,9 @@ const catalogue = [
             "cardiology",
             "family-practice",
             "urgent-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 57,
@@ -855,7 +969,9 @@ const catalogue = [
         "tags": [
             "physiotherapy",
             "long-term-care"
-        ]
+        ],
+        "priority": 1,
+        "per_room": false
     },
     {
         "id": 58,
@@ -872,6 +988,8 @@ const catalogue = [
             "optometry",
             "urgent-care",
             "long-term-care"
-        ]
+        ],
+        "priority": 3,
+        "per_room": true
     }
 ];

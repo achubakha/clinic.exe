@@ -26,8 +26,8 @@ def catalog():
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json()
-    new_list, reply, suggestions, clinic_type = chat_turn(data.get("message", ""), data.get("list", {}))
-    return jsonify({"reply": reply, "list": new_list, "suggestions": suggestions, "clinic_type": clinic_type})
+    return jsonify(chat_turn(data.get("message", ""), data.get("list", {}),
+                             data.get("profile"), data.get("last_reply", "")))
 
 @app.route("/chat-test")
 def chat_test():
