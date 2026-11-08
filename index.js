@@ -134,15 +134,19 @@ function renderChat(){
  if(typingEl)typeOut(typingEl,messages[typingEl.dataset.type],()=>quick.classList.remove("wait"));
 }
 // ChatGPT-style reveal, word by word. If the chat re-renders mid-way, the full text is shown instead.
+const TYPE_SPEED=70;  // average ms per word (~14 words/s). Lower = faster.
 function typeOut(el,m,done){
  m.animate=false;
  const words=m.text.split(/(\s+)/);let i=0;
- const t=setInterval(()=>{
-  if(!el.isConnected){clearInterval(t);return}
-  el.textContent+=words.slice(i,i+2).join("");i+=2;
+ (function step(){
+  if(!el.isConnected)return;
+  el.textContent+=words.slice(i,i+2).join("");i+=2;  // one word + the space after it
   const box=$("messages");if(box)box.scrollTop=box.scrollHeight;
-  if(i>=words.length){clearInterval(t);el.classList.remove("typing");done()}
- },35);
+  if(i>=words.length){el.classList.remove("typing");done();return}
+  const word=words[i-2]||"";
+  const pause=/[.!?]$/.test(word)?TYPE_SPEED*4:/[,;:]$/.test(word)?TYPE_SPEED*1.5:0;  // breathe at punctuation
+  setTimeout(step,TYPE_SPEED*(0.6+Math.random()*0.8)+pause);  // slight jitter so it doesn't feel mechanical
+ })();
 }
 function renderCurrent(){if(stage==="contact")renderContact();else if(stage==="handoff")renderHandoff();else renderChat()}
 let suggestions=[],busy=false,profile={};
