@@ -4,11 +4,10 @@
    productUrl should be the real Valuemed product page URL.
 */
 
-const FORM_ENDPOINT = ""; // Optional Formspree endpoint for a real test submission.
 const money=n=>new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD"}).format(n);
 const $=id=>document.getElementById(id);
 const escapeHTML=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const placeholderImage='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120"><rect width="100%" height="100%" fill="#eef2f7"/><path d="M55 70h50M80 45v50" stroke="#9aabc0" stroke-width="4" stroke-linecap="round"/><text x="80" y="108" text-anchor="middle" font-family="Arial" font-size="10" fill="#718198">Product image</text></svg>');
+const placeholderImage='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120"><rect width="100%" height="100%" fill="#f7f7f7"/><path d="M55 70h50M80 45v50" stroke="#bbbbbb" stroke-width="4" stroke-linecap="round"/><text x="80" y="108" text-anchor="middle" font-family="Arial" font-size="10" fill="#666666">Product image</text></svg>');
 let stage="clinic",clinicType="Clinic",selected=new Set(),messages=[
   {who:"bot",text:"Welcome to Clinic.exe.\n\nTell me about your clinic. What type of clinic are you opening?"}
 ],userContact=null,undoStack=[],redoStack=[];
@@ -100,15 +99,29 @@ function itemsMarkup(){
 function setSteps(){
   const steps=["1. Plan clinic","2. Review equipment","3. Contact details","4. Sales handoff"];
   const idx=stage==="clinic"?0:stage==="contact"?2:stage==="handoff"?3:1;
-  $("steps").innerHTML=steps.map((s,i)=>`<span class="step ${i===idx?"active":i<idx?"done":""}">${s}</span>`).join("");
+  reached=Math.max(reached,idx);
+  const open=i=>i===0||(i<=reached&&activeItems().length&&(i<3||userContact));  // handoff needs the contact form
+  $("steps").innerHTML=steps.map((s,i)=>`<button type="button" class="step ${i===idx?"active":i<idx?"done":""}" data-step="${i}"${i===idx?' aria-current="step"':""}${open(i)?"":" disabled"}>${s}</button>`).join("");
 }
+let reached=0;  // furthest step visited
+function pageIn(){  // panels of a newly shown page rise in one after another
+  if(!reduceMotion)[...$("mainArea").firstElementChild.children].forEach((el,i)=>el.animate([{opacity:0,transform:"translateY(14px)"},{opacity:1,transform:"none"}],{duration:420,delay:i*80,easing:"cubic-bezier(.2,.8,.2,1)",fill:"backwards"}));
+}
+let lastTotal=null;
+function totalBump(){const t=subtotal(),b=lastTotal!==null&&t!==lastTotal;lastTotal=t;return b?' class="bump"':""}  // subtotal pulses when it changes
+function goStep(i){
+  if(i<2){stage=i?"review":"clinic";renderChat()}
+  else if(i===2)goContact();
+  else{stage="handoff";renderHandoff()}
+}
+$("steps").onclick=e=>{const b=e.target.closest("[data-step]");if(b&&!b.disabled)goStep(+b.dataset.step)};
 function imageTag(p,cls=""){return `<img class="${cls}" src="${escapeHTML(p.image||"")}" alt="${escapeHTML(p.name)}" onerror="this.onerror=null;this.src='${placeholderImage}'">`}
 function listMarkup(){
   return `<section class="panel list-panel">
     <div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">Click an item to view details</div></div><span class="count">${activeItems().length} ITEMS</span></div>
     <div class="list-toolbar" style="padding:10px 12px 0"><button class="icon-btn" id="undoBtn" title="Undo" ${undoStack.length?"":"disabled"}>Undo</button><button class="icon-btn" id="redoBtn" title="Redo" ${redoStack.length?"":"disabled"}>Redo</button></div>
     <div class="items">${activeItems().length?itemsMarkup():`<div class="empty">Your equipment list is empty.<br>Describe your clinic to get started.</div>`}</div>
-    <div class="list-footer"><div class="total-row"><span>Indicative subtotal</span><strong>${money(subtotal())}</strong></div><div class="footer-note">CAD · Before tax, shipping and installation</div><button class="primary" id="finalizeList" style="width:100%;margin-top:12px" ${activeItems().length ? "" : "disabled"}>Finalize list</button></div>
+    <div class="list-footer"><div class="total-row"><span>Indicative subtotal</span><strong${totalBump()}>${money(subtotal())}</strong></div><div class="footer-note">CAD · Before tax, shipping and installation</div><button class="primary" id="finalizeList" style="width:100%;margin-top:12px" ${activeItems().length ? "" : "disabled"}>Finalize list</button></div>
   </section>`;
 }
 function visualMarkup(){
@@ -151,6 +164,7 @@ const VIZ_COMPACT_CSS=`
 body.compact header,body.compact .building-bar,body.compact .left-panel,body.compact .right-panel,
 body.compact .scene-heading,body.compact .canvas-toolbar,body.compact .view-options,body.compact .stage-instructions{display:none!important}
 body.compact{overflow:hidden!important;background:transparent!important}
+body.compact .toast,body.compact .building-toast{display:none!important}
 body.compact .workspace{display:block!important;height:100vh!important;min-height:0!important;padding:0!important;margin:0!important}
 body.compact .scene-panel{height:100vh!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 body.compact .canvas-stage{height:100vh!important;min-height:0!important;margin:0!important;border-radius:0!important}
@@ -356,7 +370,7 @@ function renderChat(){
   ws.querySelector(".chat-panel").outerHTML=chatMarkup();
   $("vizInfo").innerHTML=vizInfoMarkup();$("vizSide").innerHTML=vizSideMarkup();
  }else{
-  $("mainArea").innerHTML=`<div class="workspace">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;setupViz();
+  $("mainArea").innerHTML=`<div class="workspace">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;setupViz();pageIn();
  }
  const items=document.querySelector(".items");if(items)items.scrollTop=keep;
  messages.forEach(m=>m.fresh=false);  // fade each message in once, not on every re-render
@@ -457,20 +471,22 @@ $("productModal").addEventListener("click",e=>{if(e.target===$("productModal"))c
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeProduct();closeFinalize();setVizFull(false)}});
 
 function goContact(){stage="contact";renderContact()}
-function summaryMarkup(){return `<section class="panel contact-summary"><div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">${activeItems().length} selected products</div></div></div><div class="panel-body">${activeItems().length?activeItems().map(p=>`<div class="summary-item">${imageTag(p)}<div><strong>${escapeHTML(p.name)}</strong><small>Quantity: ${p.qty}</small></div><strong style="font-size:10px">${money(p.qty*p.price)}</strong></div>`).join(""):`<div class="empty">No products selected.</div>`}<div class="summary-total"><span>Indicative subtotal</span><span>${money(subtotal())}</span></div><div class="footer-note">CAD · Before tax, shipping and installation</div><div style="margin-top:13px"><button class="secondary" id="backToPlanner">Edit equipment list</button></div></div></section>`}
+function summaryMarkup(){return `<section class="panel contact-summary"><div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">${activeItems().length} selected products</div></div></div>
+ <div class="summary-items">${activeItems().length?activeItems().map(p=>`<div class="summary-item">${imageTag(p)}<div><strong>${escapeHTML(p.name)}</strong><small>Quantity: ${p.qty}</small></div><span class="line-price">${money(p.qty*p.price)}</span></div>`).join(""):`<div class="empty">No products selected.</div>`}</div>
+ <div class="summary-foot"><div class="total-row"><span>Indicative subtotal</span><strong>${money(subtotal())}</strong></div><div class="footer-note">CAD · Before tax, shipping and installation</div></div></section>`}
 function renderContact(){
  setSteps();
+ const u=userContact||{},val=k=>` value="${escapeHTML(u[k]||"")}"`;
  $("mainArea").innerHTML=`<div class="contact-layout">${summaryMarkup()}<section class="panel contact-card"><div class="eyebrow">Final step</div><h2>Request a personalized quote</h2><p>Your selected equipment will be included in the request. A Valuemed sales representative can review the details and provide a final quote.</p>
  <form id="contactForm"><div class="form-grid">
- <div class="field"><label for="fullname">Full name *</label><input id="fullname" required autocomplete="name" placeholder="Alex Chen"></div>
- <div class="field"><label for="email">Work email *</label><input id="email" type="email" required autocomplete="email" placeholder="alex@yourclinic.ca"></div>
- <div class="field"><label for="clinic">Clinic name *</label><input id="clinic" required placeholder="Example Eye Clinic"></div>
- <div class="field"><label for="phone">Phone (optional)</label><input id="phone" type="tel" autocomplete="tel" placeholder="780-555-0100"></div>
- <div class="field full"><label for="location">Clinic location (optional)</label><input id="location" placeholder="Edmonton, Alberta"></div>
- <div class="field full"><label for="notes">Additional notes (optional)</label><textarea id="notes" placeholder="Delivery timeline, room requirements, etc."></textarea></div>
+ <div class="field"><label for="fullname">Full name *</label><input id="fullname"${val("name")} required autocomplete="name" placeholder="Alex Chen"></div>
+ <div class="field"><label for="email">Work email *</label><input id="email"${val("email")} type="email" required autocomplete="email" placeholder="alex@yourclinic.ca"></div>
+ <div class="field"><label for="clinic">Clinic name *</label><input id="clinic"${val("clinic")} required placeholder="Example Eye Clinic"></div>
+ <div class="field"><label for="phone">Phone (optional)</label><input id="phone"${val("phone")} type="tel" autocomplete="tel" placeholder="780-555-0100"></div>
+ <div class="field full"><label for="location">Clinic location (optional)</label><input id="location"${val("location")} placeholder="Edmonton, Alberta"></div>
+ <div class="field full"><label for="notes">Additional notes (optional)</label><textarea id="notes" placeholder="Delivery timeline, room requirements, etc.">${escapeHTML(u.notes||"")}</textarea></div>
  </div><div class="modal-actions"><button type="button" class="secondary" id="backChat">Back to planner</button><button type="submit" class="primary">Review sales request</button></div></form></section>${visualMarkup()}</div>`;
- setupViz();
- $("backToPlanner").onclick=()=>{stage="review";renderChat()};
+ setupViz();pageIn();
  $("backChat").onclick=()=>{stage="review";renderChat()};
  $("contactForm").onsubmit=e=>{e.preventDefault();userContact={name:$("fullname").value.trim(),email:$("email").value.trim(),clinic:$("clinic").value.trim(),phone:$("phone").value.trim(),location:$("location").value.trim(),notes:$("notes").value.trim()};stage="handoff";renderHandoff()};
 }
@@ -480,19 +496,34 @@ function emailText(){
 }
 function renderHandoff(){
  setSteps();
- $("mainArea").innerHTML=`<div class="contact-layout">${summaryMarkup()}<section class="panel contact-card"><div class="eyebrow">Sales handoff</div><h2>Review the sales request</h2><p>This is the structured request that would be sent to the sales team.</p><div class="mail-preview" id="emailPreview"></div><div class="modal-actions" style="justify-content:flex-start"><button class="secondary" id="copyEmail">Copy request</button><button class="secondary" id="mailto">Open email draft</button><button class="primary" id="send">${FORM_ENDPOINT?"Send test request":"Simulate submission"}</button></div><div class="notification" id="notice"></div><div class="notice">${FORM_ENDPOINT?"Test endpoint configured. Use dummy information during the demo.":"Demo mode: no email is delivered. Configure FORM_ENDPOINT or connect your team's backend to deliver requests."}</div><div class="modal-actions"><button class="secondary" id="editList">Back to equipment</button><button class="secondary" id="restart">Start over</button></div></section>${visualMarkup()}</div>`;
- setupViz();
+ $("mainArea").innerHTML=`<div class="contact-layout">${summaryMarkup()}<section class="panel contact-card"><div class="eyebrow">Sales handoff</div><h2>Review the sales request</h2><p>This is the request that will be sent to the sales team.</p><div class="mail-preview" id="emailPreview"></div><div class="modal-actions" style="justify-content:flex-start"><button class="secondary" id="copyEmail">Copy request</button><button class="secondary" id="mailto">Open email draft</button><button class="primary" id="send">Submission</button></div><div class="notification" id="notice"></div><div class="notice">Prices are illustrative. A sales representative will confirm final pricing and availability.</div><div class="modal-actions"><button class="secondary" id="editList">Back to equipment</button><button class="secondary" id="restart">Start over</button></div></section>${visualMarkup()}</div>`;
+ setupViz();pageIn();
  $("emailPreview").textContent=emailText();
  $("copyEmail").onclick=async()=>{try{await navigator.clipboard.writeText(emailText());notify("Request copied to clipboard.")}catch{notify("Clipboard access unavailable. Select and copy the request manually.")}};
- $("mailto").onclick=()=>{window.location.href="mailto:?subject="+encodeURIComponent("New Clinic Equipment Quote Request — "+userContact.clinic)+"&body="+encodeURIComponent(emailText())};
- $("send").onclick=async()=>{
-  if(!FORM_ENDPOINT){notify("Demo complete: submission simulated. No email was sent.");return}
-  const data=new FormData();Object.entries(userContact).forEach(([k,v])=>data.append(k,v));data.append("equipment_request",emailText());data.append("_subject","New Clinic Equipment Quote Request");
-  try{const res=await fetch(FORM_ENDPOINT,{method:"POST",body:data,headers:{Accept:"application/json"}});if(!res.ok)throw new Error();notify("The test form service accepted the request. Check its configured destination inbox.");}
-  catch{notify("Submission failed. Check the endpoint and connection.");}
+ $("mailto").onclick=async()=>{
+  const full=emailText(),link=body=>"mailto:?subject="+encodeURIComponent("New Clinic Equipment Quote Request - "+userContact.clinic)+"&body="+encodeURIComponent(body.replace(/\n/g,"\r\n"));
+  let copied=true;try{await navigator.clipboard.writeText(full)}catch{copied=false}  // copy first: the page loses focus once the mail app opens
+  const fits=link(full).length<=2000;  // Chrome/Edge on Windows ignore mailto links over 2048 characters
+  window.location.href=fits?link(full):link(copied?"Paste the quote request here (Ctrl+V / Cmd+V). It has been copied to your clipboard.\n":"Paste the quote request here. Use \"Copy request\" on the sales request page to copy it.\n");
+  notify(fits?"Opening your email app."+(copied?" The request is also on your clipboard if no email app opens.":"")
+   :copied?"Opening your email app. The request is too long for an email link, so it's on your clipboard: paste it into the email body.":"Opening your email app. The request is too long for an email link: use \"Copy request\" and paste it into the email body.");
+ };
+ $("send").onclick=async e=>{  // the server re-prices the list from the catalogue, saves it, and emails it (see .env)
+  const btn=e.currentTarget,label=btn.textContent;btn.disabled=true;btn.textContent="Sending…";
+  try{
+   const res=await fetch("/api/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...userContact,
+    list:Object.fromEntries(activeItems().map(p=>[String(p.id),p.qty])),profile:Object.fromEntries(profileLines())})});
+   const data=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(data.error||"Something went wrong sending your request.");
+   btn.textContent="Sent";  // stays disabled so the same request isn't sent twice
+   notify(data.emailed?`Request sent to the sales team. Your reference is ${data.ref}.`:`Request saved as ${data.ref}, but email isn't set up on the server yet (see .env).`);
+  }catch(err){
+   btn.disabled=false;btn.textContent=label;
+   notify(err.message==="Failed to fetch"?"Couldn't reach the server. Check your connection and try again.":err.message);
+  }
  };
  $("editList").onclick=()=>{stage="review";renderChat()};
- $("restart").onclick=()=>{selected.clear();catalogue.forEach(p=>p.qty=1);undoStack=[];redoStack=[];suggestions=[];profile={};messages=[{who:"bot",text:"Welcome to Clinic.exe.\n\nTell me about your clinic. What type of clinic are you opening?"}];stage="clinic";userContact=null;renderChat()};
+ $("restart").onclick=()=>{selected.clear();catalogue.forEach(p=>p.qty=1);undoStack=[];redoStack=[];suggestions=[];profile={};messages=[{who:"bot",text:"Welcome to Clinic.exe.\n\nTell me about your clinic. What type of clinic are you opening?"}];stage="clinic";userContact=null;reached=0;renderChat()};
 }
 function notify(text){const n=$("notice");n.style.display="block";n.textContent=text}
 renderChat();
