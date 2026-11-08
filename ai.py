@@ -116,15 +116,21 @@ def build_plan(catalog, profile):
     return new_list, reply + " You can change anything on the list.", suggestions[:3]
 
 
-def chat_turn(message, current_list, profile=None, last_reply=""):
+def chat_turn(message, current_list, profile=None, last_reply="", rooms=None):
     """current_list: item id -> quantity, e.g. {"14": 1}.
     profile: what we know about the clinic so far (clinic_type, rooms, budget, services).
+    rooms: the rooms in the 3D clinic workspace, in order, with the room equipment placed in each
+    ([{"name": "Exam Room 101", "floor": "Ground floor", "items": {"61": 1}}]).
     Returns a dict for the API response."""
     catalog = load_catalog()
     menu = [
-        {"id": i["id"], "name": i.get("short") or i["name"], "price": i["price"], "tags": i.get("tags", [])}
+        {"id": i["id"], "name": i.get("short") or i["name"], "price": i["price"], "tags": i.get("tags", []),
+         **({"room": True} if i.get("model3d") else {})}  # room equipment: can be placed in the 3D rooms
         for i in catalog.values()
     ]
+    rooms = [{"room": n + 1, "name": str(r.get("name", ""))[:40], "floor": str(r.get("floor", ""))[:30],
+              "items": {str(k): v for k, v in (r.get("items") or {}).items() if str(k) in catalog and isinstance(v, int)}}
+             for n, r in enumerate((rooms if isinstance(rooms, list) else [])[:24]) if isinstance(r, dict)]
     clinic_types = sorted({t for i in catalog.values() for t in i.get("tags", [])})
     profile = clean_profile(profile, clinic_types)
     prompt = f"""You are the ClinicFlow planning assistant. You help doctors build an equipment list for a new clinic.
@@ -142,17 +148,25 @@ Other rules:
 - Use ONLY items from the catalogue, with their exact id.
 - If the user names a clinic type that is NOT supported, add nothing. Reply: "We don't have the equipment for this clinic yet." Then mention the supported types.
 - When the user asks to add, remove, or change the quantity of an item, do it. If they change the clinic type, rooms, budget or services later, update the profile; the list is rebuilt automatically.
-- You ONLY talk about clinic equipment, this clinic plan and this equipment list. For anything else (weather, jokes, homework, news), do not answer; say you can only help plan clinic equipment, then repeat the question from your previous message if it asked one, otherwise offer to adjust the list. Use no actions.
+- You ONLY talk about clinic equipment, this clinic plan, this equipment list and its rooms. For anything else (weather, jokes, homework, news), do not answer; say you can only help plan clinic equipment, then repeat the question from your previous message if it asked one, otherwise offer to adjust the list. Use no actions.
 - Keep your reply short and in plain, simple language.
 - Always give 2 to 3 suggestions: short tappable answers to your question (under 6 words each), e.g. "2 rooms", "No budget limit", "No extra services", "Show my list", "I'm done".
 
+Rooms (the 3D clinic workspace):
+- Room equipment (catalogue items with "room":true, e.g. beds, chairs, stools, carts, monitors) can be placed in the rooms. Small supplies cannot.
+- To spread room equipment evenly across all rooms, use {{"op": "spread"}}. Add "id" to spread just one item.
+- To set how many of an item are in one room, use {{"op": "place", "id": 61, "room": 2, "qty": 1}} (room = room number). Units come from items not placed yet, then from other rooms. To move an item, lower the old room and raise the new one.
+- Placing only uses items already on the list. If they want more in the rooms than the list has, also "add" them.
+- The number of rooms is the profile "rooms"; to add or remove rooms, change it.
+
 Reply with JSON only, in this shape:
 {{"reply": "your short message", "profile": {{"clinic_type": "...", "rooms": 2, "budget": 5000, "services": ["..."]}}, "actions": [{{"op": "add", "id": 14, "qty": 1}}], "suggestions": ["short option", "short option"]}}
-In "profile", return all four fields, keeping known values and using null for unknown ones. op can be "add", "remove", or "set_qty".
+In "profile", return all four fields, keeping known values and using null for unknown ones. op can be "add", "remove", "set_qty", "place" or "spread".
 
 Catalogue: {json.dumps(menu, separators=(",", ":"))}
 Profile so far: {json.dumps(profile)}
 Current list (item id: quantity): {json.dumps(current_list)}
+Rooms (number, name, floor, placed room equipment as item id: quantity): {json.dumps(rooms, separators=(",", ":"))}
 Your previous message: {json.dumps(last_reply[:500])}
 User message: {message}"""
 
@@ -166,15 +180,31 @@ User message: {message}"""
     except Exception as e:
         print("AI error:", e, flush=True)
         return {"reply": "Sorry, I couldn't process that right now. Please try again.",
-                "list": current_list, "suggestions": [], "profile": profile}
+                "list": current_list, "suggestions": [], "profile": profile, "placements": []}
 
     new_list = dict(current_list)
+    placements = []  # room placements are applied by the page, in the 3D building
     for action in data.get("actions", []):
+        op = action.get("op")
+        if op in ("place", "spread"):
+            item_id = None if action.get("id") in (None, "") else str(action.get("id"))
+            if item_id is not None and not catalog.get(item_id, {}).get("model3d"):
+                continue  # only room equipment can be placed
+            if op == "spread":
+                placements.append({"op": "spread", "id": item_id})
+                continue
+            try:
+                room, qty = int(action.get("room")), int(action.get("qty", 1))
+            except (TypeError, ValueError):
+                continue
+            if item_id and 1 <= room <= len(rooms):
+                placements.append({"op": "place", "id": item_id, "room": room, "qty": max(0, min(8, qty))})
+            continue
         item_id = str(action.get("id"))
         if item_id not in catalog:  # ignore anything not in the catalogue
             continue
         try:
-            qty = max(1, min(50, int(action.get("qty", 1))))
+            qty = max(1, min(999, int(action.get("qty", 1))))  # same limit as the quantity box
         except (TypeError, ValueError):
             qty = 1
         op = action.get("op")
@@ -197,5 +227,5 @@ User message: {message}"""
     total = round(sum(catalog[i]["price"] * q for i, q in new_list.items() if i in catalog), 2)
     if new_profile["budget"] and total > new_profile["budget"]:
         reply += f"\n\nNote: this list totals ${total:,.2f}, which is over your ${new_profile['budget']:,.0f} budget. Ask me to trim it if you like."
-    return {"reply": reply, "list": new_list, "suggestions": suggestions,
+    return {"reply": reply, "list": new_list, "suggestions": suggestions, "placements": placements,
             "profile": new_profile, "total": total}

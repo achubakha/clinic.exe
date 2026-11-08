@@ -1,5 +1,6 @@
 
 // priority: 1 = essential, 2 = recommended, 3 = optional. per_room: quantity scales with number of rooms.
+// model3d (optional): id of the 3D model in 3d.html that represents this product in the room planner.
 const catalogue = [
     {
         "id": 1,
@@ -327,7 +328,8 @@ const catalogue = [
             "optometry"
         ],
         "priority": 2,
-        "per_room": true
+        "per_room": true,
+        "model3d": "vm-19"
     },
     {
         "id": 20,
@@ -342,7 +344,8 @@ const catalogue = [
             "dental"
         ],
         "priority": 3,
-        "per_room": true
+        "per_room": true,
+        "model3d": "vm-20"
     },
     {
         "id": 21,
@@ -474,7 +477,8 @@ const catalogue = [
             "family-practice"
         ],
         "priority": 3,
-        "per_room": true
+        "per_room": true,
+        "model3d": "vm-28"
     },
     {
         "id": 29,
@@ -938,7 +942,8 @@ const catalogue = [
             "family-practice"
         ],
         "priority": 2,
-        "per_room": false
+        "per_room": false,
+        "model3d": "vm-55"
     },
     {
         "id": 56,
@@ -991,5 +996,149 @@ const catalogue = [
         ],
         "priority": 3,
         "per_room": true
+    },
+    {
+        "id": 59,
+        "name": "Prime Care Bed Model P503",
+        "short": "Prime Care Bed P503",
+        "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/13604/images/16398/P503__40839.1731614672.386.513.jpg?c=1",
+        "qty": 1,
+        "price": 3535.28,
+        "description": "450 lbs. weight capacity, Resident Weight 425 lbs (Figure A) Best in class height range 7.8\" to 30\" (Figure B) Integrated 76\" and 80\" length extension Eight (8) Function Handheld Pendant Control includes Auto Contour…",
+        "link": "https://www.valuemed.ca/beds/prime-care-bed-model-p503/",
+        "tags": [
+            "long-term-care"
+        ],
+        "priority": 3,
+        "per_room": true,
+        "model3d": "vm-59"
+    },
+    {
+        "id": 60,
+        "name": "AseptiChair Portable Dental Chair - Blue",
+        "short": "AseptiChair Dental Chair",
+        "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12350/images/13119/AseptiChair_Portable_Dental_Chair_128-ADC-01-BLU__68373.1654890480.386.513.JPG?c=1",
+        "qty": 1,
+        "price": 6040.32,
+        "description": "The ADC-01 Portable Dental Chair is lightweight, easy to set up, and durable, making it ideal for use in mobile operatories and field dentistry. The AseptiChair's sturdy rolled steel construction is lightweight yet…",
+        "link": "https://www.valuemed.ca/aseptichair-portable-dental-chair/",
+        "tags": [
+            "dental"
+        ],
+        "priority": 3,
+        "per_room": true,
+        "model3d": "vm-60"
+    },
+    {
+        "id": 61,
+        "name": "Flight Doctors Stool",
+        "short": "Flight Doctors Stool",
+        "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/6112/images/6223/FDS-FSDOC600-L12-2__25957.1599132395.386.513.png?c=1",
+        "qty": 1,
+        "price": 1049.4,
+        "description": "Flight Doctors Stool",
+        "link": "https://www.valuemed.ca/equipment/flight-doctors-stool/",
+        "tags": [
+            "family-practice",
+            "dental",
+            "optometry",
+            "dermatology"
+        ],
+        "priority": 3,
+        "per_room": true,
+        "model3d": "vm-61"
+    },
+    {
+        "id": 62,
+        "name": "Kik-Step Stool with Retractable Castors",
+        "short": "Kik-Step Stool",
+        "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14734/images/18546/kikstep__10210.1786397841.386.513.jpg?c=1",
+        "qty": 1,
+        "price": 634.5,
+        "description": "Kik step stool with retractable casters, rolling step stool with wheels, heavy duty steel step stool 500 lb capacity, retractable wheel step stool, commercial office rolling stool, mobile step stool Valuemed Professiona",
+        "link": "https://www.valuemed.ca/patient-room/kik-step-stool-with-retractable-castors/",
+        "tags": [
+            "family-practice",
+            "urgent-care",
+            "long-term-care"
+        ],
+        "priority": 3,
+        "per_room": false,
+        "model3d": "vm-62"
+    },
+    {
+        "id": 63,
+        "name": "Solic Crash Cart w/5 Drawers 26.37\" x 20.86\" x 40.15\" w/ Defibrillator Shelf Multicolour",
+        "short": "Solic Crash Cart",
+        "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14751/images/18575/nj801_Solic_Crash_Cart_w_5_Drawers_26.37_x_20.86_x_40.15_w_Defibrillator_Shelf_Multicolour__57619.1786550239.386.513.jpg?c=1",
+        "qty": 1,
+        "price": 2518.5,
+        "description": "Solic Medical NJ801 EMS Crash Cart with 5 drawers, defibrillator shelf, CPR board, IV pole, oxygen holder and locking storage.",
+        "link": "https://www.valuemed.ca/products/solic-crash-cart-w-5-drawers-26-37-x-20-86-x-40-15-w-defibrillator-shelf-multicolour/",
+        "tags": [
+            "urgent-care",
+            "family-practice",
+            "long-term-care"
+        ],
+        "priority": 3,
+        "per_room": false,
+        "model3d": "vm-63"
+    },
+    {
+        "id": 64,
+        "name": "Stainless Steel Cart with 2 Shelves & 1 Drawer on Top 25.6\"L, 18\"W, 39.6\"H",
+        "short": "Stainless Steel Cart",
+        "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/14742/images/18559/f22_Solic_Cart_SS_2_shelf_1_drawer_top_1__51559.1786466538.386.513.jpg?c=1",
+        "qty": 1,
+        "price": 1265.0,
+        "description": "Solic Stainless Steel Cart with 2 Shelves & 1 Drawer on Top 25.6\"L, 18\"W, 39.6\"H",
+        "link": "https://www.valuemed.ca/products/stainless-steel-cart-with-2-shelves-1-drawer-on-top-25-6-l-18-w-39-6-h/",
+        "tags": [
+            "family-practice",
+            "urgent-care",
+            "dental",
+            "wound-care"
+        ],
+        "priority": 3,
+        "per_room": false,
+        "model3d": "vm-64"
+    },
+    {
+        "id": 65,
+        "name": "Medical Utility Cart, PVC with 3 Shelves + 1 Drawer, each",
+        "short": "Medical Utility Cart",
+        "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/12143/images/12842/Solic_Medical_Utility_Cart_with_drawer_201D__34987.1651059149.386.513.jpg?c=1",
+        "qty": 1,
+        "price": 540.5,
+        "description": "PVC wheeled utility cart, 3-shelf utility cart, utility cart with drawer, multi-swivel locking casters, plastic utility cart, dental office cart, medical storage cart, easy assemble cart, buy utility cart online, dental…",
+        "link": "https://www.valuemed.ca/solic-medical-utility-cart-pvc-with-3-shelves-1-drawer-each/",
+        "tags": [
+            "family-practice",
+            "urgent-care",
+            "long-term-care",
+            "physiotherapy"
+        ],
+        "priority": 3,
+        "per_room": false,
+        "model3d": "vm-65"
+    },
+    {
+        "id": 66,
+        "name": "Edan iM3 Vital Signs Monitor with NIBP and SpO2",
+        "short": "Edan iM3 Vitals Monitor",
+        "image": "https://cdn11.bigcommerce.com/s-cxtzy5268c/products/8164/images/8313/122-IM3NS-2__93900.1599133487.386.513.png?c=1",
+        "qty": 1,
+        "price": 3277.5,
+        "description": "Edan iM3 Vital Signs Monitor with NIBP and SpO2",
+        "link": "https://www.valuemed.ca/edan-im3-vital-signs-monitor-with-nibp-and-spo2/",
+        "tags": [
+            "urgent-care",
+            "family-practice",
+            "long-term-care",
+            "cardiology"
+        ],
+        "priority": 3,
+        "per_room": false,
+        "model3d": "vm-66"
     }
 ];

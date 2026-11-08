@@ -13,7 +13,7 @@ def home():
 
 
 # Only these files are public -- never serve the whole folder (.env holds the API key).
-@app.route("/<any('catalogue.js','index.js','styles.css'):name>")
+@app.route("/<any('catalogue.js','index.js','styles.css','3d.html','3d-engine.js','3d-app.js'):name>")
 def static_file(name):
     return send_from_directory(".", name)
 
@@ -27,7 +27,7 @@ def catalog():
 def chat():
     data = request.get_json()
     return jsonify(chat_turn(data.get("message", ""), data.get("list", {}),
-                             data.get("profile"), data.get("last_reply", "")))
+                             data.get("profile"), data.get("last_reply", ""), data.get("rooms")))
 
 @app.route("/chat-test")
 def chat_test():
