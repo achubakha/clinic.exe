@@ -21,7 +21,7 @@ function applySnapshot(s){s.forEach(x=>{const p=catalogue.find(p=>p.id===x.id);i
 function undo(){if(!undoStack.length)return false;redoStack.push(snapshot());const s=undoStack.pop();toast(describe(transition(()=>applySnapshot(s)),"Undone"),"Redo",redo);return true}
 function redo(){if(!redoStack.length)return false;undoStack.push(snapshot());const s=redoStack.pop();toast(describe(transition(()=>applySnapshot(s)),"Redone"),"Undo",undo);return true}
 const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
-function addMessage(who,text){messages.push({who,text,animate:who==="bot"&&!reduceMotion})}
+function addMessage(who,text){messages.push({who,text,animate:who==="bot"&&!reduceMotion,fresh:true})}
 
 /* List changes: apply() mutates state; items leaving slide out first, then the list
    re-renders with items that came back sliding in. Returns which ids were added/removed. */
@@ -95,7 +95,7 @@ function visualMarkup(){
 }
 function chatMarkup(){
  return `<section class="panel chat-panel"><div class="panel-head"><div><div class="panel-title">AI planning assistant</div><div class="panel-sub">Ask questions or make changes to your equipment list</div></div><span class="chat-head-status"><span class="dot"></span> AI assistant</span></div>
- <div class="messages" id="messages">${messages.map((m,i)=>`<div class="msg ${m.who==="user"?"user":""}"><div class="bubble-wrap"><div class="msg-label">${m.who==="user"?"You":"Clinic.exe"}</div>${m.thinking?`<div class="bubble thinking" aria-label="Assistant is typing"><span></span><span></span><span></span></div>`:m.animate?`<div class="bubble typing" data-type="${i}"></div>`:`<div class="bubble">${escapeHTML(m.text)}</div>`}</div></div>`).join("")}</div>
+ <div class="messages" id="messages">${messages.map((m,i)=>`<div class="msg${m.who==="user"?" user":""}${m.fresh&&!reduceMotion?" fade":""}"><div class="bubble-wrap">${m.thinking?`<div class="bubble thinking" aria-label="Assistant is typing"><span></span><span></span><span></span></div>`:m.animate?`<div class="bubble typing" data-type="${i}"></div>`:`<div class="bubble">${escapeHTML(m.text)}</div>`}</div></div>`).join("")}</div>
  <div class="composer"><div class="quick" id="quick"></div><form class="compose-row" id="chatForm"><input id="chatInput" autocomplete="off" placeholder="${stage==="clinic"?"e.g. I am opening an optometry clinic":"e.g. Remove the Almedic Eye Magnet"}" required><button class="primary" type="submit">Send</button></form></div></section>`;
 }
 function bindList(){
@@ -124,6 +124,7 @@ function renderChat(){
  const keep=document.querySelector(".items")?.scrollTop||0;  // re-render shouldn't jump the list to the top
  setSteps();$("mainArea").innerHTML=`<div class="workspace">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;
  const items=document.querySelector(".items");if(items)items.scrollTop=keep;
+ messages.forEach(m=>m.fresh=false);  // fade each message in once, not on every re-render
  const msg=$("messages");msg.scrollTop=msg.scrollHeight;bindList();
  $("chatForm").addEventListener("submit",e=>{e.preventDefault();const v=$("chatInput").value.trim();if(v)handleUser(v)});
  const options=stage==="clinic"&&!suggestions.length?clinicTypes.slice(0,4).map(t=>`I'm opening a ${t.replace(/-/g," ")} clinic`):[...suggestions,"Undo last change"];
@@ -140,7 +141,9 @@ function typeOut(el,m,done){
  const words=m.text.split(/(\s+)/);let i=0;
  (function step(){
   if(!el.isConnected)return;
-  el.textContent+=words.slice(i,i+2).join("");i+=2;  // one word + the space after it
+  const w=document.createElement("span");w.className="w";  // each word fades in, Claude-style
+  w.textContent=words.slice(i,i+2).join("");i+=2;           // one word + the space after it
+  el.appendChild(w);
   const box=$("messages");if(box)box.scrollTop=box.scrollHeight;
   if(i>=words.length){el.classList.remove("typing");done();return}
   const word=words[i-2]||"";
@@ -168,7 +171,7 @@ async function handleUser(value){
  if(/^\s*redo/i.test(value)){addMessage("bot",redoStack.length?"I restored the last undone equipment-list change.":"There's nothing to redo.");if(!redo())renderChat();return}
  if(/^\s*(continue|next step|looks good|i'?m done|confirm)/i.test(value)&&activeItems().length){goContact();return}
  const lastReply=[...messages].reverse().find(m=>m.who==="bot"&&!m.thinking)?.text||"";
- busy=true;messages.push({who:"bot",thinking:true});renderChat();
+ busy=true;messages.push({who:"bot",thinking:true,fresh:true});renderChat();
  try{
   const list=Object.fromEntries(activeItems().map(p=>[String(p.id),p.qty]));
   const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,list,profile,last_reply:lastReply})});
