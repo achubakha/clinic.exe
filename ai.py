@@ -14,7 +14,7 @@ CATALOG_FILE = "catalogue.js"  # same file the browser loads, so there is one ca
 def load_catalog():
     """catalogue.js is `const catalogue = [...JSON...];` -- read the JSON array out of it.
     Keys are string ids, because JSON object keys from the browser are strings."""
-    with open(CATALOG_FILE) as f:
+    with open(CATALOG_FILE, encoding="utf-8") as f:
         text = f.read()
     items = json.loads(text[text.index("["):text.rindex("]") + 1])
     return {str(item["id"]): item for item in items}
