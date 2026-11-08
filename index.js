@@ -17,10 +17,86 @@ function activeItems(){return catalogue.filter(p=>selected.has(p.id))}
 function subtotal(){return activeItems().reduce((sum,p)=>sum+p.qty*p.price,0)}
 function snapshot(){return catalogue.map(p=>({id:p.id,qty:p.qty,selected:selected.has(p.id)}))}
 function pushHistory(){undoStack.push(snapshot());if(undoStack.length>40)undoStack.shift();redoStack=[]}
-function applySnapshot(s){s.forEach(x=>{const p=catalogue.find(p=>p.id===x.id);if(p)p.qty=x.qty;if(x.selected)selected.add(x.id);else selected.delete(x.id)});renderCurrent()}
-function undo(){if(!undoStack.length)return;redoStack.push(snapshot());applySnapshot(undoStack.pop())}
-function redo(){if(!redoStack.length)return;undoStack.push(snapshot());applySnapshot(redoStack.pop())}
-function addMessage(who,text){messages.push({who,text})}
+function applySnapshot(s){s.forEach(x=>{const p=catalogue.find(p=>p.id===x.id);if(p)p.qty=x.qty;if(x.selected)selected.add(x.id);else selected.delete(x.id)})}
+function undo(){if(!undoStack.length)return false;redoStack.push(snapshot());const s=undoStack.pop();toast(describe(transition(()=>applySnapshot(s)),"Undone"),"Redo",redo);return true}
+function redo(){if(!redoStack.length)return false;undoStack.push(snapshot());const s=redoStack.pop();toast(describe(transition(()=>applySnapshot(s)),"Redone"),"Undo",undo);return true}
+const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function addMessage(who,text){messages.push({who,text,animate:who==="bot"&&!reduceMotion,fresh:true})}
+
+/* List changes: apply() mutates state; items leaving slide out first, then the list
+   re-renders with items that came back sliding in. Returns which ids were added/removed. */
+let enterIds=new Set();
+function transition(apply){
+ const before=new Set(selected);apply();
+ const removed=[...before].filter(id=>!selected.has(id)),added=[...selected].filter(id=>!before.has(id));
+ slideOut(removed).then(()=>{enterIds=new Set(added);renderCurrent();enterIds=new Set()});
+ return {added,removed};
+}
+function slideOut(ids){
+ const els=ids.map(id=>document.querySelector(`.item[data-product="${id}"]`)).filter(Boolean);
+ if(reduceMotion||!els.length)return Promise.resolve();
+ return Promise.all(els.map(el=>{
+  const h=el.offsetHeight+"px";el.style.overflow="hidden";
+  return el.animate([
+   {opacity:1,transform:"none",height:h},
+   {opacity:0,transform:"translateX(-40px)",height:h,offset:.55},
+   {opacity:0,transform:"translateX(-40px)",height:"0px",paddingTop:"0px",paddingBottom:"0px",borderWidth:"0px",marginBottom:"-9px"}
+  ],{duration:360,easing:"ease-in-out",fill:"forwards"}).finished.catch(()=>{});
+ }));
+}
+const shortName=id=>{const p=catalogue.find(x=>x.id===id);return p?(p.short||p.name):"item"};
+function describe({added,removed},label){
+ const n=ids=>ids.length===1?shortName(ids[0]):`${ids.length} items`;
+ if(added.length&&!removed.length)return `${label}: ${n(added)} ${added.length===1?"is":"are"} back on your list.`;
+ if(removed.length&&!added.length)return `${label}: ${n(removed)} removed from your list.`;
+ return `${label}: your last change.`;
+}
+const toastEl=document.createElement("div");toastEl.className="toast";toastEl.setAttribute("role","status");toastEl.setAttribute("aria-live","polite");document.body.appendChild(toastEl);
+let toastTimer;
+function toast(text,actionLabel,action){
+ toastEl.innerHTML=`<span>${escapeHTML(text)}</span>${actionLabel?`<button type="button">${escapeHTML(actionLabel)}</button>`:""}`;
+ if(actionLabel)toastEl.querySelector("button").onclick=()=>{toastEl.classList.remove("show");action()};
+ toastEl.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove("show"),5000);
+}
+const BIN='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+/* Quantity box: click the number and type (e.g. 100). Enter or clicking away applies it,
+   Esc puts the old number back, 0 removes the item. One delegated handler on #mainArea covers
+   the equipment list and the 3D popup panel, which are both re-rendered often. */
+const MAX_QTY=999;
+const qtyInput=(p,q)=>`<input class="qty-input" type="number" inputmode="numeric" min="0" max="${MAX_QTY}" step="1" value="${q}" data-qty="${p.id}" aria-label="Quantity of ${escapeHTML(p.short||p.name)}">`;
+function setQty(p,raw){
+ const v=Number(raw);
+ if(String(raw).trim()===""||!Number.isInteger(v)||v<0){renderCurrent();return}  // not a whole number: show the old one again
+ if(v===0){if(selected.has(p.id)){pushHistory();transition(()=>selected.delete(p.id));toast(`Removed ${p.short||p.name} from your list.`,"Undo",undo)}return}
+ const q=Math.min(MAX_QTY,v);
+ if(q!==p.qty){pushHistory();p.qty=q}
+ renderCurrent();
+ if(v>MAX_QTY)toast(`Quantities go up to ${MAX_QTY}. For more, add a note to your quote request.`);
+}
+$("mainArea").addEventListener("focusin",e=>{if(e.target.matches("input[data-qty]"))e.target.select()});
+$("mainArea").addEventListener("keydown",e=>{
+ const inp=e.target.closest("input[data-qty]");if(!inp)return;
+ e.stopPropagation();  // keep Esc from closing the popup
+ if(e.key==="Enter")inp.blur();
+ else if(e.key==="Escape"){inp.value=inp.defaultValue;inp.blur()}
+});
+$("mainArea").addEventListener("change",e=>{
+ const inp=e.target.closest("input[data-qty]");if(!inp)return;
+ const p=catalogue.find(x=>String(x.id)===inp.dataset.qty);if(p)setQty(p,inp.value);
+});
+function itemMarkup(p,delay){
+ const one=p.qty<=1,enter=delay!==null;
+ return `<article class="item${enter?" enter":""}"${enter?` style="--d:${delay}ms"`:""} data-product="${p.id}" tabindex="0" role="button" aria-label="View ${escapeHTML(p.name)} details">
+  <button class="item-x" data-action="remove" data-id="${p.id}" aria-label="Remove ${escapeHTML(p.short||p.name)}" title="Remove">×</button>
+  ${imageTag(p,"thumb")}
+  <div class="item-main"><div class="item-name">${escapeHTML(p.name)}</div><div class="item-meta">${escapeHTML((p.tags||[]).join(' · '))}</div>
+   <div class="item-bottom"><div class="qty"><button class="${one?"bin":""}" data-action="${one?"remove":"minus"}" data-id="${p.id}" aria-label="${one?"Remove item":"Decrease quantity"}" title="${one?"Remove":"Decrease"}">${one?BIN:"−"}</button>${qtyInput(p,p.qty)}<button data-action="plus" data-id="${p.id}" aria-label="Increase quantity" title="Increase">+</button></div><span class="line-price">${money(p.qty*p.price)}</span></div>
+  </div></article>`;
+}
+function itemsMarkup(){
+ let k=0;  // stagger items sliding in, capped so big lists don't take ages
+ return activeItems().map(p=>itemMarkup(p,enterIds.has(p.id)?Math.min(k++,12)*45:null)).join("");
+}
 function setSteps(){
   const steps=["1. Plan clinic","2. Review equipment","3. Contact details","4. Sales handoff"];
   const idx=stage==="clinic"?0:stage==="contact"?2:stage==="handoff"?3:1;
@@ -31,25 +107,222 @@ function listMarkup(){
   return `<section class="panel list-panel">
     <div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">Click an item to view details</div></div><span class="count">${activeItems().length} ITEMS</span></div>
     <div class="list-toolbar" style="padding:10px 12px 0"><button class="icon-btn" id="undoBtn" title="Undo" ${undoStack.length?"":"disabled"}>Undo</button><button class="icon-btn" id="redoBtn" title="Redo" ${redoStack.length?"":"disabled"}>Redo</button></div>
-    <div class="items">${activeItems().length?activeItems().map(p=>`<article class="item" data-product="${p.id}" tabindex="0" role="button" aria-label="View ${escapeHTML(p.name)} details">
-      ${imageTag(p,"thumb")}
-      <div class="item-main"><div class="item-name">${escapeHTML(p.name)}</div><div class="item-meta">${escapeHTML((p.tags||[]).join(' · '))}</div>
-        <div class="item-bottom"><div class="qty"><button data-action="minus" data-id="${p.id}" aria-label="Decrease quantity">−</button><span>${p.qty}</span><button data-action="plus" data-id="${p.id}" aria-label="Increase quantity">+</button></div><span class="line-price">${money(p.qty*p.price)}</span></div>
-        <button class="remove" data-action="remove" data-id="${p.id}">Remove item</button>
-      </div></article>`).join(""):`<div class="empty">Your equipment list is empty.<br>Describe your clinic to get started.</div>`}</div>
+    <div class="items">${activeItems().length?itemsMarkup():`<div class="empty">Your equipment list is empty.<br>Describe your clinic to get started.</div>`}</div>
     <div class="list-footer"><div class="total-row"><span>Indicative subtotal</span><strong>${money(subtotal())}</strong></div><div class="footer-note">CAD · Before tax, shipping and installation</div><button class="primary" id="finalizeList" style="width:100%;margin-top:12px" ${activeItems().length ? "" : "disabled"}>Finalize list</button></div>
   </section>`;
 }
 function visualMarkup(){
- return `<aside class="panel visual-panel"><div class="panel-head"><div><div class="panel-title">Clinic workspace</div><div class="panel-sub">3D room preview</div></div><span class="count">PREVIEW</span></div><div class="panel-body">
- <div class="eyecase"><svg viewBox="0 0 360 190" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M46 123L183 57L313 122L180 181L46 123Z" fill="#bdd4f6" stroke="#729cdc" stroke-width="2"/><path d="M46 123V96L183 34L313 99V122L183 59L46 123Z" fill="#e7f0ff" stroke="#729cdc"/><path d="M183 34V59" stroke="#729cdc"/><path d="M80 111L156 75L196 96L120 132L80 111Z" fill="#f4f9ff" stroke="#608fce" stroke-width="2"/><path d="M96 111V144L120 157V132" fill="#d6e6fa" stroke="#608fce"/><path d="M120 132V157L196 120V96" fill="#a8c4ed" stroke="#608fce"/><path d="M96 99L156 71L183 83L122 112Z" fill="#fff"/><path d="M226 99L261 81L282 92L248 110Z" fill="#f6fbff" stroke="#5e8ecb"/><path d="M229 100V138L248 147V110" fill="#cfe2fa" stroke="#5e8ecb"/><path d="M248 110V147L282 130V92" fill="#a9c6ea" stroke="#5e8ecb"/><path d="M229 99L261 81L282 92L248 110Z" fill="#fff"/><path d="M169 93L169 45M169 45L185 40" stroke="#4d7abe" stroke-width="6" stroke-linecap="round"/><circle cx="185" cy="41" r="9" fill="#5686cc"/><path d="M195 149L215 140" stroke="#648bc1" stroke-width="5" stroke-linecap="round"/></svg></div>
- <div class="visual-stats"><div class="stat"><small>Products selected</small><strong>${activeItems().length}</strong></div><div class="stat"><small>Equipment subtotal</small><strong>${money(subtotal())}</strong></div></div>
- <div class="visual-note"><strong>Clinic plan</strong><br>${profileLines().map(([k,v])=>`${k}: ${escapeHTML(v)}`).join("<br>")}</div>
+ return `<aside class="panel visual-panel"><div class="panel-head"><div><div class="panel-title">Clinic workspace</div><div class="panel-sub">3D room · drag to look around</div></div><span class="count">LIVE 3D</span></div><div class="panel-body">
+ <div class="viz-slot"><div class="viz-shell" id="vizShell" aria-label="3D clinic planner">
+  <div class="viz-bar"><div><strong>3D clinic planner</strong><span>Add equipment on the left, then arrange it in the room · changes update your equipment list</span></div><button class="viz-close" id="vizClose" type="button" aria-label="Close the 3D planner">✕</button></div>
+  <div class="viz-body"><aside class="viz-side" id="vizSide" aria-label="Room equipment">${vizSideMarkup()}</aside><div class="viz-stage"><iframe id="vizFrame" src="3d.html" title="3D clinic room planner"></iframe><nav class="viz-rooms" id="vizRooms" aria-label="Rooms"></nav></div></div>
+  <button class="viz-btn" id="vizToggle" type="button" aria-label="Open the full 3D planner">⤢ Full view</button>
+ </div></div>
+ <div id="vizInfo">${vizInfoMarkup()}</div>
  </div></aside>`;
+}
+// Popup left panel. Adding here adds to the equipment list (the list then syncs to the 3D room).
+function vizSideMarkup(){
+ const room=catalogue.filter(p=>p.model3d),inList=room.filter(p=>selected.has(p.id)),rest=room.filter(p=>!selected.has(p.id));
+ const card=p=>{const q=selected.has(p.id)?p.qty:0;return `<div class="viz-card${q?" on":""}">${imageTag(p,"viz-thumb")}<div class="viz-info"><a class="viz-name" href="${escapeHTML(p.link||"#")}" target="_blank" rel="noopener" title="${escapeHTML(p.name)}">${escapeHTML(p.short||p.name)}</a><div class="viz-price">${money(p.price)}${q>1?` <span>× ${q} = ${money(p.price*q)}</span>`:""}</div>
+  ${q?`<div class="qty"><button class="${q===1?"bin":""}" data-viz="minus" data-id="${p.id}" aria-label="${q===1?"Remove":"Decrease"} ${escapeHTML(p.short||p.name)}">${q===1?BIN:"−"}</button>${qtyInput(p,q)}<button data-viz="plus" data-id="${p.id}" aria-label="Increase ${escapeHTML(p.short||p.name)}">+</button></div>`:`<button class="viz-add" data-viz="add" data-id="${p.id}">+ Add to list</button>`}</div></div>`};
+ const total=inList.reduce((t,p)=>t+p.price*p.qty,0);
+ return `<div class="viz-side-head"><strong>Room equipment</strong><span>Real Valuemed products that appear in the 3D room</span></div>
+ <div class="viz-side-list">${inList.length?`<div class="viz-group">In your list</div>${inList.map(card).join("")}`:""}${rest.length?`<div class="viz-group">Add to your rooms</div>${rest.map(card).join("")}`:""}</div>
+ <div class="viz-side-foot"><span>Room equipment in your list</span><strong>${money(total)}</strong></div>`;
+}
+function vizSideClick(e){
+ const b=e.target.closest("[data-viz]");if(!b)return;
+ const p=catalogue.find(x=>String(x.id)===b.dataset.id);if(!p)return;
+ const name=p.short||p.name;pushHistory();
+ if(b.dataset.viz==="add"){p.qty=1;transition(()=>selected.add(p.id));toast(`Added ${name} to your equipment list.`,"Undo",undo);return}
+ if(b.dataset.viz==="minus"&&p.qty<=1){transition(()=>selected.delete(p.id));toast(`Removed ${name} from your equipment list.`,"Undo",undo);return}
+ p.qty=Math.max(1,p.qty+(b.dataset.viz==="plus"?1:-1));renderCurrent();
+}
+function vizInfoMarkup(){
+ return `<div class="visual-stats"><div class="stat"><small>Products selected</small><strong>${activeItems().length}</strong></div><div class="stat"><small>Equipment subtotal</small><strong>${money(subtotal())}</strong></div></div>
+ <div class="visual-note"><strong>Clinic plan</strong><br>${profileLines().map(([k,v])=>`${k}: ${escapeHTML(v)}`).join("<br>")}</div>`;
+}
+
+/* 3D room (3d.html) in one iframe. Small: only the 3D view. Full view: the same iframe fills the
+   screen with the whole planner, so nothing reloads and the layout is kept. 3d.html saves its
+   building in localStorage, so a fresh iframe (e.g. on the contact page) shows the same room. */
+const VIZ_COMPACT_CSS=`
+body.compact header,body.compact .building-bar,body.compact .left-panel,body.compact .right-panel,
+body.compact .scene-heading,body.compact .canvas-toolbar,body.compact .view-options,body.compact .stage-instructions{display:none!important}
+body.compact{overflow:hidden!important;background:transparent!important}
+body.compact .workspace{display:block!important;height:100vh!important;min-height:0!important;padding:0!important;margin:0!important}
+body.compact .scene-panel{height:100vh!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+body.compact .canvas-stage{height:100vh!important;min-height:0!important;margin:0!important;border-radius:0!important}
+body.popup .left-panel{display:none!important}
+body.popup header{display:none!important}
+body.popup .workspace{grid-template-columns:minmax(0,1fr) 270px!important;height:calc(100dvh - 138px)!important}`;
+const vizBackdrop=document.createElement("div");vizBackdrop.className="viz-backdrop";document.body.appendChild(vizBackdrop);
+vizBackdrop.onclick=()=>setVizFull(false);
+function setCompact(on){try{const c=$("vizFrame").contentDocument.body.classList;c.toggle("compact",on);c.toggle("popup",!on)}catch(e){}}
+function setupViz(){
+ const f=$("vizFrame");if(!f)return;
+ vizBackdrop.classList.remove("show");document.body.classList.remove("viz-open");  // a fresh panel is never open
+ f.addEventListener("load",()=>{
+  try{  // same origin (served by app.py), so we can style and drive the planner from here
+   const d=f.contentDocument,st=d.createElement("style");st.textContent=VIZ_COMPACT_CSS;d.head.appendChild(st);
+   setCompact(!$("vizShell")?.classList.contains("full"));
+   d.addEventListener("keydown",e=>{if(e.key==="Escape"&&!d.querySelector("dialog[open]"))setVizFull(false)});  // Esc while the 3D has focus
+  }catch(e){/* opened as a file:// page: the planner shows un-compacted */}
+  vizSynced=null;vizRoomsSynced=null;syncViz();
+  try{f.contentWindow.addEventListener("clinic:building-changed",renderVizRooms)}catch(e){}  // also when rooms change inside the planner
+  renderVizRooms();
+ });
+ $("vizToggle").onclick=()=>setVizFull(true);
+ $("vizClose").onclick=()=>setVizFull(false);
+ $("vizSide").onclick=vizSideClick;
+ $("vizRooms").onclick=vizRoomClick;
+}
+// Room switcher (popup only): "Room 1 of 3" with previous / next and a tab per room, across all floors.
+function vizRoomList(st){return st.floors.flatMap(f=>f.rooms.map(r=>({floorId:f.floorId,roomId:r.roomId,name:r.name,floor:f.name||""})))}
+function renderVizRooms(){
+ const el=$("vizRooms"),api=$("vizFrame")?.contentWindow?.ClinicBuilding;if(!el||!api)return;
+ let st;try{st=api.getState()}catch(e){return}
+ const rooms=vizRoomList(st),i=Math.max(0,rooms.findIndex(r=>r.floorId===st.active.floorId&&r.roomId===st.active.roomId)),cur=rooms[i];
+ el.innerHTML=`<button class="viz-room-nav" type="button" data-room="${i-1}" ${i?"":"disabled"} aria-label="Previous room">‹</button>
+  <div class="viz-room-now"><strong>Room ${i+1} of ${rooms.length}</strong><span>${escapeHTML(cur.name)}${cur.floor?` · ${escapeHTML(cur.floor)}`:""}</span></div>
+  <button class="viz-room-nav" type="button" data-room="${i+1}" ${i<rooms.length-1?"":"disabled"} aria-label="Next room">›</button>
+  <div class="viz-room-tabs">${rooms.map((r,k)=>`<button class="viz-room-tab${k===i?" on":""}" type="button" data-room="${k}" title="${escapeHTML(r.floor)}"${k===i?' aria-current="true"':""}>${escapeHTML(r.name)}</button>`).join("")}</div>`;
+ el.querySelector(".viz-room-tab.on")?.scrollIntoView({block:"nearest",inline:"nearest"});
+}
+function vizRoomClick(e){
+ const b=e.target.closest("[data-room]"),api=$("vizFrame")?.contentWindow?.ClinicBuilding;if(!b||b.disabled||!api)return;
+ const r=vizRoomList(api.getState())[+b.dataset.room];if(!r)return;
+ try{api.selectRoom({floorId:r.floorId,roomId:r.roomId})}catch(err){toast(err.message);return}
+ if(!reduceMotion)$("vizFrame").animate([{opacity:.35},{opacity:1}],{duration:280,easing:"ease-out"});
+ renderVizRooms();
+}
+// Full view: the same iframe pops up over the dimmed site (nothing reloads, the layout is kept).
+let vizCloseTimer;
+function setVizFull(full){
+ const shell=$("vizShell");if(!shell)return;
+ const closing=shell.classList.contains("closing");
+ if(full===shell.classList.contains("full")&&!closing)return;
+ clearTimeout(vizCloseTimer);shell.classList.remove("closing");
+ vizBackdrop.classList.toggle("show",full);document.body.classList.toggle("viz-open",full);
+ if(full){
+  shell.classList.add("full");shell.setAttribute("role","dialog");shell.setAttribute("aria-modal","true");
+  setCompact(false);$("vizClose").focus();
+  return;
+ }
+ const done=()=>{shell.classList.remove("full","closing");shell.removeAttribute("role");shell.removeAttribute("aria-modal");setCompact(true)};
+ if(reduceMotion)return done();
+ shell.classList.add("closing");vizCloseTimer=setTimeout(done,220);  // let the close animation play
+}
+
+/* Equipment list -> 3D building. The building mirrors the list: each planner model's "selected to buy"
+   = the list quantity of products with that model3d (0 if none). Small supplies have no model3d, so they never appear in 3D.
+   Rooms: when the chat knows how many rooms the clinic has, the building gets exactly that many exam rooms.
+   Units are spread across the rooms: a new unit goes to the room with the fewest of that product (the room open
+   in the planner wins ties), and units are taken away from the room with the most. So "1 stool per room" lands
+   one in each room, and shared items (e.g. a crash cart) go to the room you're looking at.
+   Positions you drag in the planner are kept; adding or removing equipment happens in the list. */
+let vizSynced=null,vizRoomsSynced=null,vizPending=[];
+const MODEL_TO_PRODUCT=Object.fromEntries(catalogue.filter(p=>p.model3d).map(p=>[p.model3d,String(p.id)]));
+const modelOf=id=>catalogue.find(p=>String(p.id)===String(id))?.model3d;
+// What the AI sees: the rooms in order, with the room equipment placed in each (catalogue id -> quantity).
+function vizRoomsForAI(){
+ const api=$("vizFrame")?.contentWindow?.ClinicBuilding;if(!api)return [];
+ try{return vizRoomList(api.getState()).map((r,i,all)=>{const room=api.getState().floors.find(f=>f.floorId===r.floorId).rooms.find(x=>x.roomId===r.roomId);
+  return {name:r.name,floor:r.floor,items:Object.fromEntries(room.plan.selectedItems.filter(x=>MODEL_TO_PRODUCT[x.productId]).map(x=>[MODEL_TO_PRODUCT[x.productId],x.quantity]))}})}catch(e){return []}
+}
+/* AI room placements. "spread": split each item evenly over all rooms (the first rooms get any extra).
+   "place": set how many of an item are in one room; units come from ones not placed yet, then from the
+   room with the most (never from a room set earlier in the same reply). Planner limits still apply (8 of one item, 24 items per room). */
+function applyPlacements(api,ops,want){
+ const st=api.getState();
+ const rooms=st.floors.flatMap(f=>f.rooms.map(r=>{const items=Object.fromEntries(r.plan.selectedItems.map(i=>[i.productId,i.quantity]));return {floorId:f.floorId,roomId:r.roomId,items,was:{...items}}}));
+ const has=(r,id)=>r.items[id]||0,used=r=>Object.values(r.items).reduce((t,q)=>t+q,0);
+ const free=id=>(want[id]||0)-rooms.reduce((t,r)=>t+has(r,id),0);
+ const pinned=new Set();  // rooms the AI set explicitly in this reply: later placements don't take from them
+ const take=(id,to)=>{if(free(id)>0)return true;const r=rooms.filter(x=>x!==to&&has(x,id)>0&&!pinned.has(x.roomId+'|'+id)).reduce((m,x)=>!m||has(x,id)>has(m,id)?x:m,null);if(!r)return false;r.items[id]--;return true};
+ for(const op of ops){
+  if(op.op==="spread"){
+   for(const id of op.id?[modelOf(op.id)]:Object.keys(want).filter(id=>want[id]>0)){
+    if(!id)continue;const n=want[id]||0;rooms.forEach(r=>r.items[id]=0);
+    rooms.forEach((r,k)=>{r.items[id]=Math.max(0,Math.min(8,Math.floor(n/rooms.length)+(k<n%rooms.length?1:0),24-used(r)))});
+   }
+  }else if(op.op==="place"){
+   const id=modelOf(op.id),r=rooms[op.room-1];if(!id||!r)continue;
+   while(has(r,id)>op.qty)r.items[id]--;
+   while(has(r,id)<op.qty&&used(r)<24&&take(id,r))r.items[id]=has(r,id)+1;
+   pinned.add(r.roomId+'|'+id);
+  }
+ }
+ // Placed may never exceed "selected to buy": first apply only the decreases, then the final counts.
+ const list=o=>Object.entries(o).filter(([,q])=>q>0).map(([productId,quantity])=>({productId,quantity})).sort((a,b)=>a.productId<b.productId?-1:1);
+ const key=o=>JSON.stringify(list(o));
+ for(const r of rooms){const low=Object.fromEntries(Object.keys(r.was).map(id=>[id,Math.min(r.was[id],has(r,id))]));if(key(low)!==key(r.was))api.updateRoomEquipment({floorId:r.floorId,roomId:r.roomId,items:list(low)});}
+ for(const r of rooms)if(key(r.items)!==key(r.was))api.updateRoomEquipment({floorId:r.floorId,roomId:r.roomId,items:list(r.items)});
+}
+const FLOOR_NAMES=["Ground","Second","Third","Fourth","Fifth","Sixth","Seventh","Eighth"];
+function syncVizRooms(api){
+ const want=Math.min(24,Math.max(0,Math.floor(profile.rooms||0)));  // planner limit: 24 rooms, 12 per floor
+ if(!want||want===vizRoomsSynced)return;
+ const data=api.getState();
+ if(vizRoomList(data).length!==want){
+  const empty={...JSON.parse(JSON.stringify(data.floors[0].rooms[0].plan)),selectedItems:[],layout:[]};
+  let extra=vizRoomList(data).length-want;  // too many: remove rooms from the end (last floor first)
+  for(let f=data.floors.length-1;f>=0&&extra>0;f--)while(data.floors[f].rooms.length&&extra>0){data.floors[f].rooms.pop();extra--;}
+  data.floors=data.floors.filter(f=>f.rooms.length);
+  const roomIds=new Set(data.floors.flatMap(f=>f.rooms.map(r=>r.roomId))),floorIds=new Set(data.floors.map(f=>f.floorId));
+  let count=vizRoomList(data).length;
+  for(let fi=0;count<want;fi++){  // too few: fill the ground floor, then the next floors
+   if(!data.floors[fi]){let n=fi+1;while(floorIds.has("floor-"+n))n++;floorIds.add("floor-"+n);data.floors.push({...data.floors[0],floorId:"floor-"+n,name:(FLOOR_NAMES[fi]||"Floor "+(fi+1))+" floor",rooms:[]});}
+   const floor=data.floors[fi];
+   while(floor.rooms.length<12&&count<want){let n=(fi+1)*100+floor.rooms.length+1;while(roomIds.has("room-"+n))n++;roomIds.add("room-"+n);floor.rooms.push({roomId:"room-"+n,name:"Exam Room "+n,plan:JSON.parse(JSON.stringify(empty))});count++;}
+  }
+  if(!vizRoomList(data).some(r=>r.floorId===data.active.floorId&&r.roomId===data.active.roomId))data.active={floorId:data.floors[0].floorId,roomId:data.floors[0].rooms[0].roomId};
+  api.importBuilding(data);
+ }
+ vizRoomsSynced=want;
+}
+function syncViz(){
+ const api=$("vizFrame")?.contentWindow?.ClinicBuilding;if(!api)return;  // not loaded yet: the load handler syncs
+ let known;try{known=new Set(api.getCatalogue().map(m=>m.id))}catch(e){return}
+ const want=Object.fromEntries([...known].map(m=>[m,0]));
+ activeItems().forEach(p=>{if(p.model3d in want)want[p.model3d]+=p.qty});
+ // Planner limits: 192 of one product and 384 in total per building (extra stays on the list, just not in 3D).
+ for(const id in want)want[id]=Math.min(want[id],192);
+ let over=Object.values(want).reduce((t,n)=>t+n,0)-384;
+ for(const id of Object.keys(want).sort((a,b)=>want[b]-want[a])){if(over<=0)break;const cut=Math.min(want[id],over);want[id]-=cut;over-=cut;}
+  const key=JSON.stringify([want,profile.rooms||0]),changed=key!==vizSynced;if(!changed&&!vizPending.length)return;
+ try{
+  if(changed){
+  syncVizRooms(api);
+  const st=api.getState();
+  const rooms=st.floors.flatMap(f=>f.rooms.map(r=>{const items=Object.fromEntries(r.plan.selectedItems.map(i=>[i.productId,i.quantity]));return {floorId:f.floorId,roomId:r.roomId,items,was:JSON.stringify(items)}}));
+  const active=rooms.find(r=>r.floorId===st.active.floorId&&r.roomId===st.active.roomId)||rooms[0];
+  const order=[active,...rooms.filter(r=>r!==active)];  // ties go to the room open in the planner
+  const has=(r,id)=>r.items[id]||0,used=r=>Object.values(r.items).reduce((t,q)=>t+q,0);
+  const bought=Object.fromEntries(st.purchaseSelection.map(i=>[i.productId,i.quantity]));
+  for(const [id,n] of Object.entries(want)){
+   let placed=rooms.reduce((t,r)=>t+has(r,id),0);
+   while(placed>n){const r=[...order].reverse().reduce((m,r)=>has(r,id)>has(m,id)?r:m);r.items[id]--;placed--;}  // remove from the room with the most
+   while(placed<n){  // add to the room with the fewest that still has space (planner: 8 of one model, 24 items per room)
+    const r=order.filter(r=>has(r,id)<8&&used(r)<24).reduce((m,r)=>!m||has(r,id)<has(m,id)?r:m,null);
+    if(!r)break;r.items[id]=has(r,id)+1;placed++;
+   }
+  }
+  const list=o=>Object.entries(o).filter(([,q])=>q>0).map(([productId,quantity])=>({productId,quantity}));
+  // Placed may never exceed "selected to buy": raise purchases, update rooms, then set the final purchases.
+  // (Each product only ever moves one way per sync, so no room update can overshoot.)
+  api.setPurchaseSelection(list({...bought,...Object.fromEntries(Object.entries(want).map(([id,n])=>[id,Math.max(n,bought[id]||0)]))}));
+  for(const r of rooms)if(JSON.stringify(r.items)!==r.was)api.updateRoomEquipment({floorId:r.floorId,roomId:r.roomId,items:list(r.items)});
+  api.setPurchaseSelection(list({...bought,...want}));
+  vizSynced=key;
+  }
+  if(vizPending.length){const ops=vizPending;vizPending=[];applyPlacements(api,ops,want);}
+ }catch(e){vizPending=[];console.warn("3D sync:",e.message)}
 }
 function chatMarkup(){
  return `<section class="panel chat-panel"><div class="panel-head"><div><div class="panel-title">AI planning assistant</div><div class="panel-sub">Ask questions or make changes to your equipment list</div></div><span class="chat-head-status"><span class="dot"></span> AI assistant</span></div>
- <div class="messages" id="messages">${messages.map(m=>`<div class="msg ${m.who==="user"?"user":""}"><div class="avatar">${m.who==="user"?"YOU":"AI"}</div><div class="bubble-wrap"><div class="msg-label">${m.who==="user"?"You":"Clinic.exe"}</div><div class="bubble">${escapeHTML(m.text)}</div></div></div>`).join("")}</div>
+ <div class="messages" id="messages">${messages.map((m,i)=>`<div class="msg${m.who==="user"?" user":""}${m.fresh&&!reduceMotion?" fade":""}"><div class="bubble-wrap">${m.thinking?`<div class="bubble thinking" aria-label="Assistant is typing"><span></span><span></span><span></span></div>`:m.animate?`<div class="bubble typing" data-type="${i}"></div>`:`<div class="bubble">${escapeHTML(m.text)}</div>`}</div></div>`).join("")}</div>
  <div class="composer"><div class="quick" id="quick"></div><form class="compose-row" id="chatForm"><input id="chatInput" autocomplete="off" placeholder="${stage==="clinic"?"e.g. I am opening an optometry clinic":"e.g. Remove the Almedic Eye Magnet"}" required><button class="primary" type="submit">Send</button></form></div></section>`;
 }
 function bindList(){
@@ -57,23 +330,62 @@ function bindList(){
  const finalizeButton=$("finalizeList");if(finalizeButton)finalizeButton.onclick=openFinalize;
  document.querySelectorAll(".item").forEach(el=>{
   const open=()=>openProduct(el.dataset.product);
-  el.addEventListener("click",e=>{if(e.target.closest("button"))return;open()});
-  el.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!e.target.closest("button")){e.preventDefault();open()}});
+  el.addEventListener("click",e=>{if(e.target.closest("button,input"))return;open()});
+  el.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!e.target.closest("button,input")){e.preventDefault();open()}});
  });
  document.querySelectorAll("[data-action]").forEach(btn=>btn.addEventListener("click",e=>{
   e.stopPropagation();const p=catalogue.find(x=>String(x.id)===btn.dataset.id);if(!p)return;
+  if(btn.dataset.action==="remove"){
+   if(!selected.has(p.id))return;
+   pushHistory();transition(()=>selected.delete(p.id));
+   toast(`Removed ${p.short||p.name} from your list.`,"Undo",undo);return;
+  }
   pushHistory();
   if(btn.dataset.action==="plus")p.qty++;
-  if(btn.dataset.action==="minus"){p.qty=Math.max(1,p.qty-1)}
-  if(btn.dataset.action==="remove")selected.delete(p.id);
+  if(btn.dataset.action==="minus")p.qty=Math.max(1,p.qty-1);
   renderCurrent();
  }));
 }
+let lastQuickKey="";
 function renderChat(){
- setSteps();$("mainArea").innerHTML=`<div class="workspace">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;
+ const keep=document.querySelector(".items")?.scrollTop||0;  // re-render shouldn't jump the list to the top
+ setSteps();
+ const ws=document.querySelector("#mainArea > .workspace");
+ if(ws&&$("vizFrame")){  // keep the 3D iframe alive: only swap the list and chat panels
+  ws.querySelector(".list-panel").outerHTML=listMarkup();
+  ws.querySelector(".chat-panel").outerHTML=chatMarkup();
+  $("vizInfo").innerHTML=vizInfoMarkup();$("vizSide").innerHTML=vizSideMarkup();
+ }else{
+  $("mainArea").innerHTML=`<div class="workspace">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;setupViz();
+ }
+ const items=document.querySelector(".items");if(items)items.scrollTop=keep;
+ messages.forEach(m=>m.fresh=false);  // fade each message in once, not on every re-render
  const msg=$("messages");msg.scrollTop=msg.scrollHeight;bindList();
  $("chatForm").addEventListener("submit",e=>{e.preventDefault();const v=$("chatInput").value.trim();if(v)handleUser(v)});
- const quick=$("quick");(stage==="clinic"&&!suggestions.length?clinicTypes.slice(0,4).map(t=>`I'm opening a ${t.replace(/-/g," ")} clinic`):[...suggestions,"Undo last change"]).forEach(v=>{const b=document.createElement("button");b.textContent=v;b.onclick=()=>handleUser(v);quick.appendChild(b)});
+ const options=stage==="clinic"&&!suggestions.length?clinicTypes.slice(0,4).map(t=>`I'm opening a ${t.replace(/-/g," ")} clinic`):[...suggestions,"Undo last change"];
+ const quick=$("quick"),key=JSON.stringify(options),typingEl=document.querySelector("[data-type]");
+ quick.classList.toggle("animate",key!==lastQuickKey);lastQuickKey=key;  // only pop in when the options are new
+ quick.classList.toggle("wait",!!typingEl||busy);                        // ...and after the reply has finished typing
+ options.forEach((v,i)=>{const b=document.createElement("button");b.textContent=v;b.style.setProperty("--i",i);b.onclick=()=>handleUser(v);quick.appendChild(b)});
+ if(typingEl)typeOut(typingEl,messages[typingEl.dataset.type],()=>quick.classList.remove("wait"));
+ syncViz();
+}
+// ChatGPT-style reveal, word by word. If the chat re-renders mid-way, the full text is shown instead.
+const TYPE_SPEED=70;  // average ms per word (~14 words/s). Lower = faster.
+function typeOut(el,m,done){
+ m.animate=false;
+ const words=m.text.split(/(\s+)/);let i=0;
+ (function step(){
+  if(!el.isConnected)return;
+  const w=document.createElement("span");w.className="w";  // each word fades in, Claude-style
+  w.textContent=words.slice(i,i+2).join("");i+=2;           // one word + the space after it
+  el.appendChild(w);
+  const box=$("messages");if(box)box.scrollTop=box.scrollHeight;
+  if(i>=words.length){el.classList.remove("typing");done();return}
+  const word=words[i-2]||"";
+  const pause=/[.!?]$/.test(word)?TYPE_SPEED*4:/[,;:]$/.test(word)?TYPE_SPEED*1.5:0;  // breathe at punctuation
+  setTimeout(step,TYPE_SPEED*(0.6+Math.random()*0.8)+pause);  // slight jitter so it doesn't feel mechanical
+ })();
 }
 function renderCurrent(){if(stage==="contact")renderContact();else if(stage==="handoff")renderHandoff();else renderChat()}
 let suggestions=[],busy=false,profile={};
@@ -91,28 +403,33 @@ async function handleUser(value){
  if(busy)return;
  addMessage("user",value);
  // Page navigation and history stay local; everything else goes to the AI.
- if(/^\s*undo/i.test(value)){undo();addMessage("bot","I reversed the last equipment-list change.");renderChat();return}
- if(/^\s*redo/i.test(value)){redo();addMessage("bot","I restored the last undone equipment-list change.");renderChat();return}
+ if(/^\s*undo/i.test(value)){addMessage("bot",undoStack.length?"I reversed the last equipment-list change.":"There's nothing to undo yet.");if(!undo())renderChat();return}
+ if(/^\s*redo/i.test(value)){addMessage("bot",redoStack.length?"I restored the last undone equipment-list change.":"There's nothing to redo.");if(!redo())renderChat();return}
  if(/^\s*(continue|next step|looks good|i'?m done|confirm)/i.test(value)&&activeItems().length){goContact();return}
- const lastReply=[...messages].reverse().find(m=>m.who==="bot")?.text||"";
- busy=true;addMessage("bot","Thinking…");renderChat();
+ const lastReply=[...messages].reverse().find(m=>m.who==="bot"&&!m.thinking)?.text||"";
+ busy=true;messages.push({who:"bot",thinking:true,fresh:true});renderChat();
  try{
   const list=Object.fromEntries(activeItems().map(p=>[String(p.id),p.qty]));
-  const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,list,profile,last_reply:lastReply})});
+  const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,list,profile,last_reply:lastReply,rooms:vizRoomsForAI()})});
   if(!res.ok)throw new Error(res.status);
   const data=await res.json();
-  messages.pop();pushHistory();selected.clear();
-  catalogue.forEach(p=>{const q=data.list?.[String(p.id)];if(q){p.qty=q;selected.add(p.id)}else p.qty=1});
+  messages.pop();
+  if(JSON.stringify(list)!==JSON.stringify(data.list||{}))pushHistory();  // only list changes are undoable
   profile=data.profile||profile;
   if(profile.clinic_type)clinicType=titleCase(profile.clinic_type)+" Clinic";
-  if(selected.size&&stage==="clinic")stage="review";
   suggestions=data.suggestions||[];
-  addMessage("bot",data.reply||"Done.");
+  vizPending=data.placements||[];  // applied to the 3D rooms after the list has synced
+  addMessage("bot",data.reply||"Done.");busy=false;
+  transition(()=>{
+   selected.clear();
+   catalogue.forEach(p=>{const q=data.list?.[String(p.id)];if(q){p.qty=q;selected.add(p.id)}else p.qty=1});
+   if(selected.size&&stage==="clinic")stage="review";
+  });
  }catch(e){
   messages.pop();
   addMessage("bot","I couldn't reach the assistant. Start the server with “python3 app.py” and open http://localhost:5001.");
+  busy=false;renderChat();
  }
- busy=false;renderChat();
 }
 function openFinalize(){
  if(!activeItems().length)return;
@@ -137,7 +454,7 @@ function openProduct(id){
 function closeProduct(){$("productModal").classList.remove("show")}
 $("closeProduct").onclick=closeProduct;$("modalDone").onclick=closeProduct;
 $("productModal").addEventListener("click",e=>{if(e.target===$("productModal"))closeProduct()});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeProduct();closeFinalize()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeProduct();closeFinalize();setVizFull(false)}});
 
 function goContact(){stage="contact";renderContact()}
 function summaryMarkup(){return `<section class="panel contact-summary"><div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">${activeItems().length} selected products</div></div></div><div class="panel-body">${activeItems().length?activeItems().map(p=>`<div class="summary-item">${imageTag(p)}<div><strong>${escapeHTML(p.name)}</strong><small>Quantity: ${p.qty}</small></div><strong style="font-size:10px">${money(p.qty*p.price)}</strong></div>`).join(""):`<div class="empty">No products selected.</div>`}<div class="summary-total"><span>Indicative subtotal</span><span>${money(subtotal())}</span></div><div class="footer-note">CAD · Before tax, shipping and installation</div><div style="margin-top:13px"><button class="secondary" id="backToPlanner">Edit equipment list</button></div></div></section>`}
@@ -152,6 +469,7 @@ function renderContact(){
  <div class="field full"><label for="location">Clinic location (optional)</label><input id="location" placeholder="Edmonton, Alberta"></div>
  <div class="field full"><label for="notes">Additional notes (optional)</label><textarea id="notes" placeholder="Delivery timeline, room requirements, etc."></textarea></div>
  </div><div class="modal-actions"><button type="button" class="secondary" id="backChat">Back to planner</button><button type="submit" class="primary">Review sales request</button></div></form></section>${visualMarkup()}</div>`;
+ setupViz();
  $("backToPlanner").onclick=()=>{stage="review";renderChat()};
  $("backChat").onclick=()=>{stage="review";renderChat()};
  $("contactForm").onsubmit=e=>{e.preventDefault();userContact={name:$("fullname").value.trim(),email:$("email").value.trim(),clinic:$("clinic").value.trim(),phone:$("phone").value.trim(),location:$("location").value.trim(),notes:$("notes").value.trim()};stage="handoff";renderHandoff()};
@@ -163,6 +481,7 @@ function emailText(){
 function renderHandoff(){
  setSteps();
  $("mainArea").innerHTML=`<div class="contact-layout">${summaryMarkup()}<section class="panel contact-card"><div class="eyebrow">Sales handoff</div><h2>Review the sales request</h2><p>This is the structured request that would be sent to the sales team.</p><div class="mail-preview" id="emailPreview"></div><div class="modal-actions" style="justify-content:flex-start"><button class="secondary" id="copyEmail">Copy request</button><button class="secondary" id="mailto">Open email draft</button><button class="primary" id="send">${FORM_ENDPOINT?"Send test request":"Simulate submission"}</button></div><div class="notification" id="notice"></div><div class="notice">${FORM_ENDPOINT?"Test endpoint configured. Use dummy information during the demo.":"Demo mode: no email is delivered. Configure FORM_ENDPOINT or connect your team's backend to deliver requests."}</div><div class="modal-actions"><button class="secondary" id="editList">Back to equipment</button><button class="secondary" id="restart">Start over</button></div></section>${visualMarkup()}</div>`;
+ setupViz();
  $("emailPreview").textContent=emailText();
  $("copyEmail").onclick=async()=>{try{await navigator.clipboard.writeText(emailText());notify("Request copied to clipboard.")}catch{notify("Clipboard access unavailable. Select and copy the request manually.")}};
  $("mailto").onclick=()=>{window.location.href="mailto:?subject="+encodeURIComponent("New Clinic Equipment Quote Request — "+userContact.clinic)+"&body="+encodeURIComponent(emailText())};
