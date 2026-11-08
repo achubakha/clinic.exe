@@ -170,17 +170,23 @@ Rooms (number, name, floor, placed room equipment as item id: quantity): {json.d
 Your previous message: {json.dumps(last_reply[:500])}
 User message: {message}"""
 
-    try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"},
-        )
-        data = json.loads(response.choices[0].message.content)
-    except Exception as e:
-        print("AI error:", e, flush=True)
-        return {"reply": "Sorry, I couldn't process that right now. Please try again.",
-                "list": current_list, "suggestions": [], "profile": profile, "placements": []}
+    for attempt in (1, 2):
+        try:
+            response = client.chat.completions.create(
+                model=MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+            )
+            data = json.loads(response.choices[0].message.content)
+            break
+        except Exception as e:
+            # The model now and then writes broken JSON (Groq rejects it as json_validate_failed); asking again fixes it.
+            if attempt == 1 and (isinstance(e, json.JSONDecodeError) or "json_validate_failed" in str(e)):
+                print("AI wrote invalid JSON, retrying once", flush=True)
+                continue
+            print("AI error:", e, flush=True)
+            return {"reply": "Sorry, I couldn't process that right now. Please try again.",
+                    "list": current_list, "suggestions": [], "profile": profile, "placements": []}
 
     new_list = dict(current_list)
     placements = []  # room placements are applied by the page, in the 3D building

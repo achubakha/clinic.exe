@@ -72,29 +72,32 @@ function setQty(p,raw){
  renderCurrent();
  if(v>MAX_QTY)toast(`Quantities go up to ${MAX_QTY}. For more, add a note to your quote request.`);
 }
-$("mainArea").addEventListener("focusin",e=>{if(e.target.matches("input[data-qty]"))e.target.select()});
-$("mainArea").addEventListener("keydown",e=>{
+for(const area of [$("mainArea"),$("listModal")]){  // the planner and the equipment full-view popup
+area.addEventListener("focusin",e=>{if(e.target.matches("input[data-qty]"))e.target.select()});
+area.addEventListener("keydown",e=>{
  const inp=e.target.closest("input[data-qty]");if(!inp)return;
  e.stopPropagation();  // keep Esc from closing the popup
  if(e.key==="Enter")inp.blur();
  else if(e.key==="Escape"){inp.value=inp.defaultValue;inp.blur()}
 });
-$("mainArea").addEventListener("change",e=>{
+area.addEventListener("change",e=>{
  const inp=e.target.closest("input[data-qty]");if(!inp)return;
  const p=catalogue.find(x=>String(x.id)===inp.dataset.qty);if(p)setQty(p,inp.value);
 });
+}
+const qtyControls=p=>{const one=p.qty<=1;return `<div class="qty"><button class="${one?"bin":""}" data-action="${one?"remove":"minus"}" data-id="${p.id}" aria-label="${one?"Remove item":"Decrease quantity"}" title="${one?"Remove":"Decrease"}">${one?BIN:"−"}</button>${qtyInput(p,p.qty)}<button data-action="plus" data-id="${p.id}" aria-label="Increase quantity" title="Increase">+</button></div>`};
 function itemMarkup(p,delay){
  const one=p.qty<=1,enter=delay!==null;
  return `<article class="item${enter?" enter":""}"${enter?` style="--d:${delay}ms"`:""} data-product="${p.id}" tabindex="0" role="button" aria-label="View ${escapeHTML(p.name)} details">
   <button class="item-x" data-action="remove" data-id="${p.id}" aria-label="Remove ${escapeHTML(p.short||p.name)}" title="Remove">×</button>
   ${imageTag(p,"thumb")}
   <div class="item-main"><div class="item-name">${escapeHTML(p.name)}</div><div class="item-meta">${money(p.price)} each</div>
-   <div class="item-bottom"><div class="qty"><button class="${one?"bin":""}" data-action="${one?"remove":"minus"}" data-id="${p.id}" aria-label="${one?"Remove item":"Decrease quantity"}" title="${one?"Remove":"Decrease"}">${one?BIN:"−"}</button>${qtyInput(p,p.qty)}<button data-action="plus" data-id="${p.id}" aria-label="Increase quantity" title="Increase">+</button></div><span class="line-price">${money(p.qty*p.price)}</span></div>
+   <div class="item-bottom">${qtyControls(p)}<span class="line-price">${money(p.qty*p.price)}</span></div>
   </div></article>`;
 }
 // Equipment checklist zones, in the order lists are shown (each catalogue product has one).
 const CATEGORIES=["Clinical Examination","Medical Devices & Utilities","Consumables & PPE","IT & Administrative"];
-const byCategory=items=>[...CATEGORIES,"Other"].map(c=>[c,items.filter(p=>(CATEGORIES.includes(p.category)?p.category:"Other")===c)]).filter(([,l])=>l.length);
+const byCategory=(items,all=false)=>[...CATEGORIES,"Other"].map(c=>[c,items.filter(p=>(CATEGORIES.includes(p.category)?p.category:"Other")===c)]).filter(([c,l])=>l.length||(all&&c!=="Other"));
 const groupTotal=l=>l.reduce((t,p)=>t+p.qty*p.price,0);
 const catHead=(c,l)=>`<div class="cat-head"><span>${escapeHTML(c)}</span><span>${l.length} ${l.length===1?"item":"items"} · ${money(groupTotal(l))}</span></div>`;
 function itemsMarkup(){
@@ -109,6 +112,15 @@ function setSteps(){
   $("steps").innerHTML=steps.map((s,i)=>`<button type="button" class="step ${i===idx?"active":i<idx?"done":""}" data-step="${i}"${i===idx?' aria-current="step"':""}${open(i)?"":" disabled"}>${s}</button>`).join("");
 }
 let reached=0;  // furthest step visited
+let revealed=false;  // at startup only the assistant shows; the list and 3D panels appear once the list has something in it
+function revealPanels(ws,from){  // the chat glides to the middle while the list and the 3D room slide in from the sides
+  if(reduceMotion)return;
+  const chat=ws.querySelector(".chat-panel"),to=chat.getBoundingClientRect(),ease="cubic-bezier(.2,.8,.2,1)";
+  chat.animate([{transform:`translate(${from.left-to.left}px,${from.top-to.top}px)`},{transform:"none"}],{duration:650,easing:ease});
+  [[".list-panel",-70,150],[".visual-panel",70,300]].forEach(([sel,dx,delay])=>ws.querySelector(sel).animate(
+    [{opacity:0,transform:`translateX(${dx}px) scale(.94)`,filter:"blur(4px)"},{opacity:1,transform:"none",filter:"none"}],
+    {duration:700,delay,easing:ease,fill:"backwards"}));
+}
 function pageIn(){  // panels of a newly shown page rise in one after another
   if(!reduceMotion)[...$("mainArea").firstElementChild.children].forEach((el,i)=>el.animate([{opacity:0,transform:"translateY(14px)"},{opacity:1,transform:"none"}],{duration:420,delay:i*80,easing:"cubic-bezier(.2,.8,.2,1)",fill:"backwards"}));
 }
@@ -124,7 +136,7 @@ function imageTag(p,cls=""){return `<img class="${cls}" src="${escapeHTML(p.imag
 function listMarkup(){
   return `<section class="panel list-panel">
     <div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">Click an item to view details</div></div><span class="count">${activeItems().length} ITEMS</span></div>
-    <div class="list-toolbar" style="padding:10px 12px 0"><button class="icon-btn" id="undoBtn" title="Undo" ${undoStack.length?"":"disabled"}>Undo</button><button class="icon-btn" id="redoBtn" title="Redo" ${redoStack.length?"":"disabled"}>Redo</button></div>
+    <div class="list-toolbar" style="padding:10px 12px 0"><button class="icon-btn" id="undoBtn" title="Undo" ${undoStack.length?"":"disabled"}>Undo</button><button class="icon-btn" id="redoBtn" title="Redo" ${redoStack.length?"":"disabled"}>Redo</button><button class="icon-btn full-btn" id="listFullBtn" type="button" aria-label="Open the equipment list in full view" ${activeItems().length?"":"disabled"}>⤢ Full view</button></div>
     <div class="items">${activeItems().length?itemsMarkup():`<div class="empty">Your equipment list is empty.<br>Describe your clinic to get started.</div>`}</div>
     <div class="list-footer"><div class="total-row"><span>Indicative subtotal</span><strong${totalBump()}>${money(subtotal())}</strong></div><div class="footer-note">CAD · Before tax, shipping and installation</div><button class="primary" id="finalizeList" style="width:100%;margin-top:12px" ${activeItems().length ? "" : "disabled"}>Finalize list</button></div>
   </section>`;
@@ -347,15 +359,17 @@ function chatMarkup(){
  <div class="composer"><div class="quick" id="quick"></div><form class="compose-row" id="chatForm"><input id="chatInput" autocomplete="off" placeholder="${stage==="clinic"?"e.g. I am opening an optometry clinic":"e.g. Remove the Almedic Eye Magnet"}" required><button class="primary" type="submit">Send</button></form></div></section>`;
 }
 function bindList(){
- $("undoBtn").onclick=undo;$("redoBtn").onclick=redo;
- const finalizeButton=$("finalizeList");if(finalizeButton)finalizeButton.onclick=openFinalize;
+ $("undoBtn").onclick=undo;$("redoBtn").onclick=redo;$("listFullBtn").onclick=()=>openListModal();
+ const finalizeButton=$("finalizeList");if(finalizeButton)finalizeButton.onclick=()=>openListModal(true);
  document.querySelectorAll(".item").forEach(el=>{
   const open=()=>openProduct(el.dataset.product);
   el.addEventListener("click",e=>{if(e.target.closest("button,input"))return;open()});
   el.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!e.target.closest("button,input")){e.preventDefault();open()}});
  });
- document.querySelectorAll("[data-action]").forEach(btn=>btn.addEventListener("click",e=>{
-  e.stopPropagation();const p=catalogue.find(x=>String(x.id)===btn.dataset.id);if(!p)return;
+ $("mainArea").querySelectorAll("[data-action]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();listAction(btn)}));
+}
+function listAction(btn){  // remove / minus / plus, from the planner list or the full-view popup
+  const p=catalogue.find(x=>String(x.id)===btn.dataset.id);if(!p)return;
   if(btn.dataset.action==="remove"){
    if(!selected.has(p.id))return;
    pushHistory();transition(()=>selected.delete(p.id));
@@ -365,19 +379,22 @@ function bindList(){
   if(btn.dataset.action==="plus")p.qty++;
   if(btn.dataset.action==="minus")p.qty=Math.max(1,p.qty-1);
   renderCurrent();
- }));
 }
 let lastQuickKey="";
 function renderChat(){
  const keep=document.querySelector(".items")?.scrollTop||0;  // re-render shouldn't jump the list to the top
  setSteps();
+ const show=revealed||activeItems().length>0,reveal=show&&!revealed;revealed=show;
  const ws=document.querySelector("#mainArea > .workspace");
  if(ws&&$("vizFrame")){  // keep the 3D iframe alive: only swap the list and chat panels
+  const from=ws.querySelector(".chat-panel").getBoundingClientRect();
   ws.querySelector(".list-panel").outerHTML=listMarkup();
   ws.querySelector(".chat-panel").outerHTML=chatMarkup();
   $("vizInfo").innerHTML=vizInfoMarkup();$("vizSide").innerHTML=vizSideMarkup();
+  ws.classList.toggle("solo",!show);
+  if(reveal)revealPanels(ws,from);
  }else{
-  $("mainArea").innerHTML=`<div class="workspace">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;setupViz();pageIn();
+  $("mainArea").innerHTML=`<div class="workspace${show?"":" solo"}">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;setupViz();pageIn();
  }
  const items=document.querySelector(".items");if(items)items.scrollTop=keep;
  messages.forEach(m=>m.fresh=false);  // fade each message in once, not on every re-render
@@ -389,6 +406,7 @@ function renderChat(){
  quick.classList.toggle("wait",!!typingEl||busy);                        // ...and after the reply has finished typing
  options.forEach((v,i)=>{const b=document.createElement("button");b.textContent=v;b.style.setProperty("--i",i);b.onclick=()=>handleUser(v);quick.appendChild(b)});
  if(typingEl)typeOut(typingEl,messages[typingEl.dataset.type],()=>quick.classList.remove("wait"));
+ if($("listModal").classList.contains("show"))fillListModal();  // keep the full view in step with the list
  syncViz();
 }
 // ChatGPT-style reveal, word by word. If the chat re-renders mid-way, the full text is shown instead.
@@ -452,17 +470,6 @@ async function handleUser(value){
   busy=false;renderChat();
  }
 }
-function openFinalize(){
- if(!activeItems().length)return;
- $("finalizeItems").innerHTML=byCategory(activeItems()).map(([c,l])=>catHead(c,l)+l.map(p=>`<div class="finalize-row">${imageTag(p)}<div><strong>${escapeHTML(p.name)}</strong><small>Quantity: ${p.qty} · ${money(p.price)} each</small></div><span class="finalize-price">${money(p.qty*p.price)}</span></div>`).join("")).join("");
- $("finalizeTotal").textContent=money(subtotal());
- $("finalizeModal").classList.add("show");
-}
-function closeFinalize(){$("finalizeModal").classList.remove("show")}
-$("closeFinalize").onclick=closeFinalize;
-$("editFinalize").onclick=closeFinalize;
-$("confirmFinalize").onclick=()=>{closeFinalize();goContact()};
-$("finalizeModal").addEventListener("click",e=>{if(e.target===$("finalizeModal"))closeFinalize()});
 
 function openProduct(id){
  const p=catalogue.find(x=>String(x.id)===String(id));if(!p)return;
@@ -475,7 +482,40 @@ function openProduct(id){
 function closeProduct(){$("productModal").classList.remove("show")}
 $("closeProduct").onclick=closeProduct;$("modalDone").onclick=closeProduct;
 $("productModal").addEventListener("click",e=>{if(e.target===$("productModal"))closeProduct()});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeProduct();closeFinalize();setVizFull(false)}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("productModal").classList.contains("show"))return closeProduct();closeListModal();setVizFull(false)}});
+
+/* Equipment list full view: every zone from the catalogue, with the list's items as cards. */
+const eqCard=p=>`<article class="eq-card" data-product="${p.id}" tabindex="0" role="button" aria-label="View ${escapeHTML(p.name)} details">
+ <button class="item-x" data-action="remove" data-id="${p.id}" aria-label="Remove ${escapeHTML(p.short||p.name)}" title="Remove">×</button>
+ <div class="eq-media">${imageTag(p,"eq-thumb")}</div><div class="eq-name" title="${escapeHTML(p.name)}">${escapeHTML(p.name)}</div><div class="eq-each">${money(p.price)} each</div>
+ <div class="eq-bottom">${qtyControls(p)}<span class="line-price">${money(p.qty*p.price)}</span></div></article>`;
+function fillListModal(){
+ const items=activeItems();if(!items.length)return closeListModal();
+ const groups=byCategory(items,true),body=$("listModalBody"),keep=body.scrollTop;
+ $("listModalEyebrow").textContent=listConfirm?"Equipment list confirmation":"Equipment list · full view";
+ $("listModalTitle").textContent=listConfirm?"Review your equipment list":"Your equipment by category";
+ $("listModalSub").textContent=`${items.length} ${items.length===1?"product":"products"} in ${groups.filter(([,l])=>l.length).length} of ${CATEGORIES.length} categories`
+  +(listConfirm?". Please confirm this is the equipment for your quote request. You can still change quantities here.":"");
+ $("listModalNote").hidden=$("listModalBack").hidden=!listConfirm;
+ $("listModalTabs").innerHTML=groups.map(([c,l],i)=>`<button type="button" class="cat-tab" data-jump="${i}"${l.length?"":" disabled"}>${escapeHTML(c)}<b>${l.length}</b></button>`).join("");
+ body.innerHTML=groups.map(([c,l],i)=>`<section class="eq-group" id="eqCat${i}"><div class="eq-group-head"><h3>${escapeHTML(c)}</h3><span>${l.length?`${l.length} ${l.length===1?"item":"items"} · ${money(groupTotal(l))}`:"None yet"}</span></div>
+  ${l.length?`<div class="eq-grid">${l.map(eqCard).join("")}</div>`:`<div class="eq-empty">Nothing from this category on your list yet. Ask the assistant to add some.</div>`}</section>`).join("");
+ body.scrollTop=keep;
+ $("listModalTotal").textContent=money(subtotal());
+}
+let listConfirm=false;  // true: the full view is the "confirm your list" step before contact details
+function openListModal(confirm=false){if(!activeItems().length)return;listConfirm=confirm;$("listModalBody").scrollTop=0;fillListModal();$("listModal").classList.add("show");$("closeListModal").focus()}
+function closeListModal(){$("listModal").classList.remove("show")}
+$("closeListModal").onclick=closeListModal;
+$("listModalFinalize").onclick=()=>{closeListModal();goContact()};
+$("listModalBack").onclick=closeListModal;
+$("listModal").addEventListener("click",e=>{
+ if(e.target===$("listModal"))return closeListModal();
+ const act=e.target.closest("[data-action]");if(act)return listAction(act);
+ const jump=e.target.closest("[data-jump]");if(jump)return $("eqCat"+jump.dataset.jump).scrollIntoView({behavior:reduceMotion?"auto":"smooth",block:"start"});
+ const card=e.target.closest(".eq-card");if(card&&!e.target.closest("button,input"))openProduct(card.dataset.product);
+});
+$("listModal").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches(".eq-card")){e.preventDefault();openProduct(e.target.dataset.product)}});
 
 function goContact(){stage="contact";renderContact()}
 function summaryMarkup(){return `<section class="panel contact-summary"><div class="panel-head"><div><div class="panel-title">Your equipment list</div><div class="panel-sub">${activeItems().length} selected products</div></div></div>
@@ -530,7 +570,33 @@ function renderHandoff(){
   }
  };
  $("editList").onclick=()=>{stage="review";renderChat()};
- $("restart").onclick=()=>{selected.clear();catalogue.forEach(p=>p.qty=1);undoStack=[];redoStack=[];suggestions=[];profile={};messages=[{who:"bot",text:"Welcome to Clinic.exe.\n\nTell me about your clinic. What type of clinic are you opening?"}];stage="clinic";userContact=null;reached=0;renderChat()};
+ $("restart").onclick=()=>{selected.clear();catalogue.forEach(p=>p.qty=1);undoStack=[];redoStack=[];suggestions=[];profile={};messages=[{who:"bot",text:"Welcome to Clinic.exe.\n\nTell me about your clinic. What type of clinic are you opening?"}];stage="clinic";userContact=null;reached=0;revealed=false;renderChat()};
 }
 function notify(text){const n=$("notice");n.style.display="block";n.textContent=text}
 renderChat();
+
+/* Landing page. "Get started" goes to #plan; Back (or the logo) returns. The planner stays laid out underneath
+   (inert while covered), so the 3D room is already loaded and framed when the landing lifts away. */
+const app=document.querySelector(".app");
+function showLanding(show,instant=false){
+ const l=$("landing");
+ app.inert=show;document.body.classList.toggle("landing-open",show);
+ if(show){l.hidden=false;l.classList.remove("leaving");l.scrollTop=0;countUp();return}
+ if(l.hidden)return;
+ if(instant||reduceMotion){l.hidden=true;return}
+ l.classList.add("leaving");setTimeout(()=>{l.hidden=true;l.classList.remove("leaving")},700);
+ [document.querySelector(".topbar"),document.querySelector(".intro")].forEach((el,i)=>el.animate([{opacity:0,transform:"translateY(16px)"},{opacity:1,transform:"none"}],{duration:600,delay:250+i*90,easing:"cubic-bezier(.2,.8,.2,1)",fill:"backwards"}));
+ setTimeout(pageIn,350);
+ if(matchMedia("(pointer:fine)").matches)setTimeout(()=>$("chatInput")?.focus({preventScroll:true}),900);  // no surprise keyboard on phones
+}
+function countUp(){  // hero stats count up from 0 (real numbers from the catalogue)
+ const n={products:catalogue.length,types:clinicTypes.length,categories:CATEGORIES.length};
+ document.querySelectorAll("[data-count]").forEach(el=>{
+  const to=n[el.dataset.count];if(reduceMotion){el.textContent=to;return}
+  const t0=performance.now(),tick=t=>{const k=Math.min(1,(t-t0)/1400);el.textContent=Math.round(to*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(tick)};
+  requestAnimationFrame(tick);
+ });
+}
+$("heroMore").onclick=()=>$("how").scrollIntoView({behavior:reduceMotion?"auto":"smooth"});
+addEventListener("hashchange",()=>showLanding(location.hash!=="#plan"));
+showLanding(location.hash!=="#plan",true);

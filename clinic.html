@@ -10,9 +10,45 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<!-- Landing page: shown until "Get started" (#plan); the planner below stays loaded underneath it -->
+<div class="landing" id="landing">
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <header class="hero-top">
+      <div class="brand hero-brand"><div class="logo">C</div><div class="brand-name">Clinic<span>.exe</span></div></div>
+      <div class="hero-badge">DEMO · SAMPLE CATALOGUE</div>
+    </header>
+    <div class="hero-main">
+      <h1 class="hero-title">Equip your new clinic in one conversation</h1>
+      <a class="hero-cta" href="#plan">Get started</a>
+      <p class="hero-note">Free to use. No account needed.<br>Your equipment list, 3D rooms and quote request in minutes.</p>
+    </div>
+    <div class="hero-stats">
+      <div><strong data-count="products">0</strong><span>Catalogue products</span></div>
+      <div><strong data-count="types">0</strong><span>Clinic types</span></div>
+      <div><strong data-count="categories">0</strong><span>Equipment categories</span></div>
+    </div>
+    <button class="hero-more" type="button" id="heroMore" aria-label="See how it works">How it works<span aria-hidden="true">↓</span></button>
+  </section>
+  <section class="how" id="how">
+    <div class="how-inner">
+      <div class="eyebrow">How it works</div>
+      <h2>From first question to quote request</h2>
+      <ol class="how-steps">
+        <li><span>01</span><h3>Describe your clinic</h3><p>Tell the AI assistant your practice type, number of rooms, budget and extra services. It asks one short question at a time.</p></li>
+        <li><span>02</span><h3>Get a complete list</h3><p>It builds your equipment list from the catalogue, organised into Clinical Examination, Medical Devices &amp; Utilities, Consumables &amp; PPE and IT &amp; Administrative.</p></li>
+        <li><span>03</span><h3>See it in 3D</h3><p>Room equipment such as chairs, stools, beds and carts appears in a live 3D model of your clinic, room by room.</p></li>
+        <li><span>04</span><h3>Send for a quote</h3><p>Check the totals, add your contact details and send the request straight to the sales team.</p></li>
+      </ol>
+      <a class="primary how-cta" href="#plan">Get started</a>
+      <p class="how-foot">Sample products and illustrative prices. Final pricing is confirmed by a sales representative.</p>
+    </div>
+  </section>
+</div>
+
 <div class="app">
   <header class="topbar">
-    <div class="brand"><div class="logo">C</div><div><div class="brand-name">Clinic<span>.exe</span></div><div class="eyebrow">Valuemed equipment planner</div></div></div>
+    <a class="brand" href="#" title="Back to the home page"><div class="logo">C</div><div><div class="brand-name">Clinic<span>.exe</span></div><div class="eyebrow">Valuemed equipment planner</div></div></a>
     <div class="demo">DEMO · SAMPLE CATALOGUE</div>
   </header>
   <section class="intro">
@@ -23,14 +59,12 @@
   <main id="mainArea"></main>
 </div>
 
-<div class="modal-bg" id="finalizeModal" role="dialog" aria-modal="true" aria-labelledby="finalizeTitle">
-  <div class="modal">
-    <div class="modal-top"><div><div class="eyebrow">Equipment list confirmation</div><h2 id="finalizeTitle">Review your equipment list</h2></div><button class="close" id="closeFinalize" aria-label="Close">×</button></div>
-    <p>Please confirm that this is the equipment you want included in your quote request. You can go back and make changes at any time.</p>
-    <div id="finalizeItems"></div>
-    <div class="summary-total"><span>Indicative subtotal</span><strong id="finalizeTotal">${money(0)}</strong></div>
-    <div class="notice">Prices are illustrative and do not represent a binding quote. Final pricing and availability require Valuemed sales-team confirmation.</div>
-    <div class="modal-actions"><button class="secondary" id="editFinalize">Go back and edit</button><button class="primary" id="confirmFinalize">Confirm list and continue</button></div>
+<div class="modal-bg" id="listModal" role="dialog" aria-modal="true" aria-labelledby="listModalTitle">
+  <div class="modal list-modal">
+    <div class="list-modal-head"><div><div class="eyebrow" id="listModalEyebrow">Equipment list · full view</div><h2 id="listModalTitle">Your equipment by category</h2><p id="listModalSub"></p><p class="list-modal-note" id="listModalNote" hidden>Prices are illustrative and not a binding quote. Final pricing and availability are confirmed by the Valuemed sales team.</p></div><button class="close" id="closeListModal" aria-label="Close">×</button></div>
+    <nav class="cat-tabs" id="listModalTabs" aria-label="Jump to a category"></nav>
+    <div class="list-modal-body" id="listModalBody"></div>
+    <div class="list-modal-foot"><div class="total-row"><span>Indicative subtotal</span><strong id="listModalTotal"></strong></div><button class="secondary" id="listModalBack" hidden>Go back and edit</button><button class="primary" id="listModalFinalize">Confirm list and continue</button></div>
   </div>
 </div>
 
