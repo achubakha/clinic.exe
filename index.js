@@ -44,7 +44,7 @@ function visualMarkup(){
  return `<aside class="panel visual-panel"><div class="panel-head"><div><div class="panel-title">Clinic workspace</div><div class="panel-sub">3D room preview</div></div><span class="count">PREVIEW</span></div><div class="panel-body">
  <div class="eyecase"><svg viewBox="0 0 360 190" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M46 123L183 57L313 122L180 181L46 123Z" fill="#bdd4f6" stroke="#729cdc" stroke-width="2"/><path d="M46 123V96L183 34L313 99V122L183 59L46 123Z" fill="#e7f0ff" stroke="#729cdc"/><path d="M183 34V59" stroke="#729cdc"/><path d="M80 111L156 75L196 96L120 132L80 111Z" fill="#f4f9ff" stroke="#608fce" stroke-width="2"/><path d="M96 111V144L120 157V132" fill="#d6e6fa" stroke="#608fce"/><path d="M120 132V157L196 120V96" fill="#a8c4ed" stroke="#608fce"/><path d="M96 99L156 71L183 83L122 112Z" fill="#fff"/><path d="M226 99L261 81L282 92L248 110Z" fill="#f6fbff" stroke="#5e8ecb"/><path d="M229 100V138L248 147V110" fill="#cfe2fa" stroke="#5e8ecb"/><path d="M248 110V147L282 130V92" fill="#a9c6ea" stroke="#5e8ecb"/><path d="M229 99L261 81L282 92L248 110Z" fill="#fff"/><path d="M169 93L169 45M169 45L185 40" stroke="#4d7abe" stroke-width="6" stroke-linecap="round"/><circle cx="185" cy="41" r="9" fill="#5686cc"/><path d="M195 149L215 140" stroke="#648bc1" stroke-width="5" stroke-linecap="round"/></svg></div>
  <div class="visual-stats"><div class="stat"><small>Products selected</small><strong>${activeItems().length}</strong></div><div class="stat"><small>Equipment subtotal</small><strong>${money(subtotal())}</strong></div></div>
- <div class="visual-note"></div>
+ <div class="visual-note"><strong>Clinic plan</strong><br>${profileLines().map(([k,v])=>`${k}: ${escapeHTML(v)}`).join("<br>")}</div>
  </div></aside>`;
 }
 function chatMarkup(){
@@ -73,10 +73,18 @@ function renderChat(){
  setSteps();$("mainArea").innerHTML=`<div class="workspace">${listMarkup()}${chatMarkup()}${visualMarkup()}</div>`;
  const msg=$("messages");msg.scrollTop=msg.scrollHeight;bindList();
  $("chatForm").addEventListener("submit",e=>{e.preventDefault();const v=$("chatInput").value.trim();if(v)handleUser(v)});
- const quick=$("quick");(stage==="clinic"?clinicTypes.slice(0,4).map(t=>`I'm opening a ${t.replace(/-/g," ")} clinic`):[...suggestions,"Undo last change"]).forEach(v=>{const b=document.createElement("button");b.textContent=v;b.onclick=()=>handleUser(v);quick.appendChild(b)});
+ const quick=$("quick");(stage==="clinic"&&!suggestions.length?clinicTypes.slice(0,4).map(t=>`I'm opening a ${t.replace(/-/g," ")} clinic`):[...suggestions,"Undo last change"]).forEach(v=>{const b=document.createElement("button");b.textContent=v;b.onclick=()=>handleUser(v);quick.appendChild(b)});
 }
 function renderCurrent(){if(stage==="contact")renderContact();else if(stage==="handoff")renderHandoff();else renderChat()}
-let suggestions=[],busy=false;
+let suggestions=[],busy=false,profile={};
+// What the assistant has learned about the clinic, shown in the workspace panel and the sales email.
+function profileLines(){
+ const show=v=>v===null||v===undefined?"Not asked yet":v;
+ return [["Practice",profile.clinic_type?titleCase(profile.clinic_type):null],
+  ["Rooms",profile.rooms],
+  ["Budget",profile.budget===0?"No limit":profile.budget?money(profile.budget):null],
+  ["Extra services",Array.isArray(profile.services)?(profile.services.join(", ")||"None"):null]].map(([k,v])=>[k,show(v)]);
+}
 const clinicTypes=[...new Set(catalogue.flatMap(p=>p.tags||[]))];
 const titleCase=t=>t.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 async function handleUser(value){
@@ -86,15 +94,17 @@ async function handleUser(value){
  if(/^\s*undo/i.test(value)){undo();addMessage("bot","I reversed the last equipment-list change.");renderChat();return}
  if(/^\s*redo/i.test(value)){redo();addMessage("bot","I restored the last undone equipment-list change.");renderChat();return}
  if(/^\s*(continue|next step|looks good|i'?m done|confirm)/i.test(value)&&activeItems().length){goContact();return}
+ const lastReply=[...messages].reverse().find(m=>m.who==="bot")?.text||"";
  busy=true;addMessage("bot","Thinking…");renderChat();
  try{
   const list=Object.fromEntries(activeItems().map(p=>[String(p.id),p.qty]));
-  const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,list})});
+  const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,list,profile,last_reply:lastReply})});
   if(!res.ok)throw new Error(res.status);
   const data=await res.json();
   messages.pop();pushHistory();selected.clear();
   catalogue.forEach(p=>{const q=data.list?.[String(p.id)];if(q){p.qty=q;selected.add(p.id)}else p.qty=1});
-  if(data.clinic_type)clinicType=titleCase(data.clinic_type)+" Clinic";
+  profile=data.profile||profile;
+  if(profile.clinic_type)clinicType=titleCase(profile.clinic_type)+" Clinic";
   if(selected.size&&stage==="clinic")stage="review";
   suggestions=data.suggestions||[];
   addMessage("bot",data.reply||"Done.");
@@ -148,7 +158,7 @@ function renderContact(){
 }
 function emailText(){
  const u=userContact;
- return `NEW CLINIC EQUIPMENT QUOTE REQUEST\n\nClinic type: ${clinicType}\nClinic name: ${u.clinic}\nContact: ${u.name}\nEmail: ${u.email}\nPhone: ${u.phone||"Not provided"}\nLocation: ${u.location||"Not provided"}\n\nEQUIPMENT REQUEST\n${activeItems().map(p=>`- ${p.name} | Quantity: ${p.qty} | Reference price: ${money(p.price)} | Line total: ${money(p.qty*p.price)}`).join("\n")||"(No products selected)"}\n\nIllustrative subtotal: ${money(subtotal())}\nAdditional notes: ${u.notes||"None"}\n\nSample product information and prices are for demonstration only. Final pricing and availability require sales-team confirmation.`;
+ return `NEW CLINIC EQUIPMENT QUOTE REQUEST\n\nClinic type: ${clinicType}\n${profileLines().slice(1).map(([k,v])=>`${k}: ${v}`).join("\n")}\nClinic name: ${u.clinic}\nContact: ${u.name}\nEmail: ${u.email}\nPhone: ${u.phone||"Not provided"}\nLocation: ${u.location||"Not provided"}\n\nEQUIPMENT REQUEST\n${activeItems().map(p=>`- ${p.name} | Quantity: ${p.qty} | Reference price: ${money(p.price)} | Line total: ${money(p.qty*p.price)}`).join("\n")||"(No products selected)"}\n\nIllustrative subtotal: ${money(subtotal())}\nAdditional notes: ${u.notes||"None"}\n\nSample product information and prices are for demonstration only. Final pricing and availability require sales-team confirmation.`;
 }
 function renderHandoff(){
  setSteps();
@@ -163,7 +173,7 @@ function renderHandoff(){
   catch{notify("Submission failed. Check the endpoint and connection.");}
  };
  $("editList").onclick=()=>{stage="review";renderChat()};
- $("restart").onclick=()=>{selected.clear();catalogue.forEach(p=>p.qty=1);undoStack=[];redoStack=[];suggestions=[];messages=[{who:"bot",text:"Welcome to Clinic.exe.\n\nTell me about your clinic. What type of clinic are you opening?"}];stage="clinic";userContact=null;renderChat()};
+ $("restart").onclick=()=>{selected.clear();catalogue.forEach(p=>p.qty=1);undoStack=[];redoStack=[];suggestions=[];profile={};messages=[{who:"bot",text:"Welcome to Clinic.exe.\n\nTell me about your clinic. What type of clinic are you opening?"}];stage="clinic";userContact=null;renderChat()};
 }
 function notify(text){const n=$("notice");n.style.display="block";n.textContent=text}
 renderChat();
