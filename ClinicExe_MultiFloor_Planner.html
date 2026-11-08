@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Clinic.exe interactive 3D equipment room planner. Multi-floor offline demo with independent room layouts, building purchase quantities and live 3D equipment.">
+<title>Clinic.exe — Multi-floor Building Studio</title>
+<style>:root{--ink:#172d47;--muted:#76859a;--blue:#2868cf;--soft:#eef4ff;--line:#e5ebf2;--paper:#fff;--danger:#a95f16;--radius:14px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);font-size:13px}*{box-sizing:border-box}body{margin:0;background:#f4f7fb}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.4}button,input,select{outline:none}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #a7caff;outline-offset:2px}button{border:0}svg{width:18px;height:18px;display:inline-block;vertical-align:middle;flex-shrink:0}header{height:76px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid var(--line);padding:0 26px;gap:18px}.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit}.brand-mark{height:40px;width:40px;display:grid;place-items:center;border-radius:12px;background:#2766c7;color:white;box-shadow:0 3px 8px #24518f19}.brand-mark svg{width:25px;height:25px}.brand-name{font-size:23px;font-weight:760;letter-spacing:-1px;line-height:1.05}.brand-name span{color:#7a96b7;font-weight:500}.brand-caption{font-size:8px;letter-spacing:2px;color:#7c8ea4;margin-top:4px;font-weight:700}.breadcrumb{display:flex;align-items:center;gap:12px;color:#8a98aa;font-size:12px}.breadcrumb strong{font-weight:600;color:#405570}.header-actions{display:flex;gap:10px;align-items:center}.save-state{display:flex;align-items:center;gap:6px;margin-right:10px;font-size:11px;color:#6b8195}.status-dot{height:6px;width:6px;background:#6bab94;border-radius:50%}.btn{display:inline-flex;gap:7px;align-items:center;justify-content:center;border:1px solid var(--line);background:white;color:#405670;border-radius:9px;padding:10px 13px;font-weight:600;font-size:12px;white-space:nowrap}.btn:hover{background:#f4f7fc}.btn.primary{background:var(--blue);border-color:var(--blue);color:white;box-shadow:0 3px 7px #2c67c31c}.btn.primary:hover{background:#215bb7}.btn.subtle{background:#f4f7fb;border-color:#f4f7fb}.btn.small{padding:7px 9px;font-size:11px}.btn.wide{width:100%}.btn.danger{color:#ad5a4a;border-color:#ebddd8;background:white}.workspace{display:grid;grid-template-columns:286px minmax(340px,1fr) 254px;height:calc(100dvh - 76px);min-height:650px}.sidebar{background:#fff;overflow:auto;scrollbar-width:thin}.left-panel{border-right:1px solid var(--line);padding:23px 19px 16px}.eyebrow{font-size:9px;text-transform:uppercase;letter-spacing:1.8px;font-weight:750;color:#8494a9;margin-bottom:9px}.section-title{font-size:19px;margin:0 0 6px;font-weight:690;letter-spacing:-.6px}.section-subtitle{font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 18px}.field-label{font-size:10px;font-weight:650;color:#61748b;display:block;margin:0 0 7px}.field-select, .field-input{width:100%;border:1px solid #dfe7f0;border-radius:8px;background:#f9fbfd;color:var(--ink);padding:9px 10px;min-width:0}.field-select{height:36px;font-size:11px}.room-fields{display:flex;gap:9px;align-items:flex-end;margin-top:12px}.room-fields label{flex:1;min-width:0}.input-unit{display:flex;align-items:center;border:1px solid #dfe7f0;border-radius:8px;background:#f9fbfd;padding:0 9px}.input-unit input{width:100%;border:0;background:none;min-width:0;padding:8px 0;color:#233c59}.input-unit span{color:#8f9eaf;font-size:10px;padding-left:4px}.input-unit input::-webkit-inner-spin-button{opacity:.5}.room-note{font-size:10px;color:#91a0b1;margin:9px 0 15px}.section-divider{border:0;border-top:1px solid var(--line);margin:20px 0 18px}.catalogue-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.catalogue-heading h2{font-size:13px;margin:0;font-weight:700}.pill{font-size:9px;letter-spacing:.6px;padding:4px 6px;border-radius:4px;background:#f0f4f9;color:#7487a0;font-weight:650}.catalogue{display:flex;flex-direction:column;gap:8px}.product-card{display:grid;grid-template-columns:38px 1fr;gap:0 9px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px;background:white;transition:background .15s,border-color .15s}.product-card.active{background:#f6f9ff;border-color:#cdddf3}.product-icon{grid-row:1 / 3;align-self:start;width:36px;height:36px;border:1px solid #e2eaf4;background:#fff;border-radius:9px;display:grid;place-items:center;color:#6289ba}.product-icon svg{width:24px;height:24px}.product-name{font-size:11px;font-weight:650;margin:0 0 3px;line-height:1.2}.product-meta{font-size:9px;color:#8c9aab}.product-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:9px;gap:3px}.quote-tag{font-size:9px;color:#8b9aad}.stepper{display:flex;align-items:center;border:1px solid #dce5f0;border-radius:6px;overflow:hidden;background:#fff;height:25px}.stepper button{color:#54769e;background:#fff;width:23px;height:25px;line-height:1;font-size:15px;padding:0}.stepper button:hover{background:#eaf2fd}.stepper input{border:0;width:25px;text-align:center;padding:0;background:white;color:#314f73;font-size:11px;font-weight:650;-moz-appearance:textfield;appearance:textfield}.stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.left-footer{font-size:10px;line-height:1.55;color:#92a0b1;margin:16px 3px 0}.scene-panel{position:relative;min-width:0;display:flex;flex-direction:column;background:#f1f5fa;overflow:hidden}.scene-heading{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 12px;gap:12px}.scene-heading h1{font-size:20px;margin:0;font-weight:660;letter-spacing:-.7px}.scene-heading p{margin:6px 0 0;color:#8392a6;font-size:11px}.live-pill{display:flex;align-items:center;gap:6px;border:1px solid #d9e6ef;background:#f8fbff;padding:7px 9px;border-radius:6px;font-size:9px;color:#7890aa;font-weight:650;letter-spacing:.5px}.live-pill span{width:5px;height:5px;border-radius:50%;background:#6d9bce}.canvas-toolbar{display:flex;align-items:center;justify-content:space-between;margin:5px 22px 0;gap:8px;z-index:3}.segmented{display:flex;padding:3px;background:#e5edf6;border-radius:8px;gap:2px}.segmented button{display:flex;align-items:center;gap:6px;background:none;color:#778aa2;border-radius:6px;font-size:10px;padding:7px 10px}.segmented button svg{width:14px;height:14px}.segmented button.active{background:white;box-shadow:0 2px 4px #25415c0a;color:#31567e}.tool-icons{display:flex;gap:5px}.icon-btn{display:grid;place-items:center;width:31px;height:31px;background:white;border:1px solid #e0e8f1;border-radius:7px;color:#7991ad}.icon-btn:hover{background:#e9f2ff;color:#3167aa}.canvas-stage{flex:1;min-height:380px;position:relative;background:radial-gradient(ellipse at 50% 42%,#f9fcff 0%,#edf3fa 75%);overflow:hidden}.canvas-stage canvas{width:100%;height:100%;display:block;touch-action:none;outline:none;cursor:grab}.canvas-stage canvas.dragging{cursor:grabbing}.dimension-tag{position:absolute;pointer-events:none;transform:translate(-50%,-50%);font-size:10px;color:#7c91aa;background:#f6faffdf;padding:3px 7px;border-radius:4px;white-space:nowrap}.scene-badge{position:absolute;top:18px;left:24px;display:flex;gap:8px;pointer-events:none}.scene-badge span{font-size:10px;background:#ffffffc9;border:1px solid #e1e9f3;padding:6px 8px;border-radius:6px;color:#7e92aa}.scene-badge strong{color:#456786;font-weight:650}.selected-label{position:absolute;pointer-events:none;transform:translate(-50%,-100%);font-size:10px;font-weight:600;background:#fff;color:#3f628d;border:1px solid #d1e0f2;box-shadow:0 4px 16px #203b6312;padding:7px 10px;border-radius:7px;white-space:nowrap}.selected-label:after{content:"";position:absolute;left:50%;top:100%;width:6px;height:6px;background:#fff;transform:translate(-50%,-3px) rotate(45deg);border-right:1px solid #d1e0f2;border-bottom:1px solid #d1e0f2}.stage-instructions{position:absolute;bottom:19px;left:50%;transform:translateX(-50%);white-space:nowrap;display:flex;align-items:center;gap:14px;font-size:10px;color:#8295ac;background:#ffffffda;border:1px solid #e3eaf3;padding:9px 13px;border-radius:8px;pointer-events:none}.stage-instructions span{display:flex;align-items:center;gap:5px}.stage-instructions svg{width:13px;height:13px}.view-options{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid #e0e7f0;background:#f8fbfe;gap:12px;min-height:50px}.check-label{display:flex;align-items:center;gap:5px;font-size:10px;color:#72869e;white-space:nowrap}.check-label input{accent-color:#3a77ca;width:12px;height:12px;margin:0}.checks{display:flex;gap:16px}.view-note{font-size:9px;color:#97a6b7}.right-panel{border-left:1px solid var(--line);padding:24px 20px 20px}.inspector-head{font-size:13px;font-weight:700;margin-bottom:14px}.selected-visual{height:78px;background:linear-gradient(135deg,#edf4ff,#f5f8fc);border:1px solid #e6edf6;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:13px;color:#5d89c1}.selected-visual svg{width:54px;height:54px;stroke-width:1.05}.selected-name{font-size:14px;font-weight:700;margin:0 0 5px}.selected-id{font-size:10px;color:#8a9db4;margin-bottom:17px}.dimension-row{display:flex;justify-content:space-between;font-size:10px;color:#7c8fa6;margin-bottom:8px}.dimension-row strong{font-weight:550;color:#536e8d}.control-label{font-size:10px;color:#7d90a8;margin:17px 0 8px}.xy-fields{display:flex;gap:8px}.xy-fields label{flex:1}.rotation-row{display:flex;align-items:center;gap:8px;margin-top:10px}.rotation-value{flex:1;font-size:11px;color:#6b82a0}.selection-actions{display:flex;gap:7px;margin-top:11px}.selection-actions .btn{flex:1;font-size:10px;padding:9px 6px}.empty-selection{text-align:center;padding:22px 6px;color:#8c9caf;font-size:11px;line-height:1.6}.empty-selection svg{display:block;margin:0 auto 14px;width:42px;height:42px;color:#aac0d8}.plan-summary{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}.summary-line{display:flex;justify-content:space-between;font-size:11px;margin:11px 0;color:#7c8fa6}.summary-line strong{color:#415d7c;font-weight:650}.layout-status{border:1px solid #dcece5;background:#f2f8f5;border-radius:9px;padding:11px;margin-top:14px;font-size:10px;line-height:1.6;color:#658976}.layout-status.warning{background:#fff8ec;border-color:#f1dfbc;color:#a1773e}.status-title{display:flex;align-items:center;gap:6px;font-weight:650;margin-bottom:3px}.layout-status p{margin:0;font-size:9px;line-height:1.6}.utility-actions{display:flex;flex-direction:column;gap:7px;margin-top:14px}.disclaimer{font-size:9px;line-height:1.65;color:#96a4b5;margin-top:17px}.disclaimer strong{color:#7d91aa;font-weight:600}.toast{position:fixed;left:50%;bottom:27px;transform:translate(-50%,15px);opacity:0;pointer-events:none;z-index:100;background:#203d60;color:white;border:1px solid #354f70;border-radius:10px;padding:12px 18px;font-size:12px;max-width:calc(100vw - 32px);box-shadow:0 8px 25px #20344d29;transition:opacity .16s,transform .16s}.toast.show{opacity:1;transform:translate(-50%,0)}.toast.error{background:#83503e;border-color:#956751}dialog{border:1px solid #d8e3f0;border-radius:17px;padding:25px;color:#244360;max-width:610px;width:calc(100% - 32px);box-shadow:0 20px 100px #102b5340}dialog::backdrop{background:#16335477;backdrop-filter:blur(3px)}.dialog-header{display:flex;align-items:center;justify-content:space-between;gap:10px}.dialog-header h2{margin:0;font-size:20px;letter-spacing:-.5px}.dialog-body{font-size:12px;line-height:1.75;color:#6c819c}.dialog-body code{color:#2863ac;background:#f0f5fb;padding:1px 4px;border-radius:3px}.dialog-body pre{white-space:pre-wrap;background:#f0f5fb;border:1px solid #e2eaf3;padding:14px;border-radius:9px;color:#3d628c;font:11px/1.6 ui-monospace,monospace}.dialog-body textarea{width:100%;height:136px;padding:12px;border:1px solid #dbe5f0;border-radius:8px;color:#3b5b80;font:11px/1.6 ui-monospace,monospace;background:#f9fbfd;resize:vertical}.dialog-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}.fatal{position:absolute;inset:0;background:#edf3fa;display:flex;align-items:center;justify-content:center;padding:32px;z-index:10}.fatal>div{max-width:430px;background:white;border:1px solid #d9e3ef;padding:26px;border-radius:12px;color:#5c7694;line-height:1.7;font-size:12px}.fatal h2{font-size:19px;color:#294e76}.fatal code{font-size:11px;word-break:break-word}.embed header{display:none}.embed .workspace{height:100dvh;grid-template-columns:minmax(300px,1fr) 230px}.embed .left-panel{display:none}.embed .workspace{min-height:500px}.embed .right-panel{padding:18px}.embed .scene-heading{padding-top:18px}[hidden]{display:none!important}
+@media(min-width:1600px){.workspace{grid-template-columns:306px minmax(340px,1fr) 274px}.left-panel{padding-left:24px;padding-right:24px}.right-panel{padding:28px 25px}.product-card{padding:12px}.product-name{font-size:12px}.product-meta{font-size:10px}}
+@media(max-width:1170px){.workspace{grid-template-columns:250px minmax(300px,1fr) 218px}.left-panel{padding:20px 14px}.right-panel{padding:20px 14px}.breadcrumb{display:none}.stage-instructions{gap:9px;font-size:9px}.scene-heading{padding-left:19px;padding-right:19px}.canvas-toolbar{margin-left:15px;margin-right:15px}.view-options{padding:12px 15px}.view-note{display:none}.save-state{display:none}.product-card{gap:0 6px;padding:9px}.product-name{font-size:10px}}
+@media(max-width:900px){.workspace{grid-template-columns:245px minmax(300px,1fr)}.right-panel{display:none}.header-actions .btn:not(.primary){display:none}.embed .workspace{grid-template-columns:1fr}.scene-heading h1{font-size:18px}.stage-instructions span:last-child{display:none}}
+@media(max-width:600px){header{padding:0 15px;height:64px}.brand-name{font-size:21px}.brand-caption{font-size:7px}.header-actions{gap:4px}.header-actions .primary{padding:9px;font-size:10px}.workspace{display:flex;flex-direction:column;height:auto;min-height:0}.scene-panel{order:-1;height:68dvh;min-height:500px}.left-panel{overflow:visible;border-right:0;border-top:1px solid var(--line);padding:22px}.catalogue{display:grid;grid-template-columns:1fr 1fr}.product-card{grid-template-columns:30px 1fr}.product-icon{width:28px;height:28px}.product-icon svg{width:20px;height:20px}.product-bottom{grid-column:1/3}.product-name{font-size:10px}.scene-heading{padding-top:18px}.canvas-toolbar{margin-top:0}.scene-heading p{font-size:10px}.canvas-stage{min-height:300px}.stage-instructions{bottom:10px}.view-options{min-height:42px}.embed .workspace{height:100dvh;min-height:0}.embed .scene-panel{height:100dvh}.embed .left-panel{display:none}.embed .scene-panel .canvas-stage{min-height:250px}}
+
+/* Multi-floor additions. The original 3D viewport remains unchanged. */
+header{height:72px}.breadcrumb{gap:8px}.breadcrumb .pill{letter-spacing:.6px}.brand-caption{letter-spacing:1.5px}.building-bar{background:#fff;border-bottom:1px solid #dce5f1;display:grid;grid-template-columns:1fr auto;gap:13px 24px;padding:17px 25px 13px;position:relative;z-index:8}.building-kicker{font-size:9px;color:#7890ae;letter-spacing:1.7px;font-weight:700;display:block;margin-bottom:5px}.building-identity strong{font-size:19px;letter-spacing:-.5px}.building-identity #building-summary{font-size:11px;color:#7a8da4;margin-left:13px}.text-button{background:transparent;font-size:10px;color:#4773aa;margin-left:7px;padding:3px}.building-metrics{display:flex;gap:25px;align-items:center}.building-metrics>div{display:flex;flex-direction:column;gap:3px;min-width:45px}.building-metrics strong{font-size:22px;line-height:1;letter-spacing:-.8px}.building-metrics span{font-size:10px;color:#7a8ba1}.building-metrics .available-metric strong{color:#337e70}.room-navigation{grid-column:1/-1;display:flex;gap:8px;align-items:center;padding-top:10px;border-top:1px solid #edf1f6}.room-navigation label{display:flex;gap:9px;align-items:center;font-size:10px;color:#6d829d;font-weight:600}.room-navigation label[for=room-select]{margin-left:12px}.room-navigation select{min-width:165px;border:1px solid #dde5ef;border-radius:7px;padding:8px 28px 8px 10px;background:#f7faff;color:#274969;font-size:11px;max-width:220px}.room-navigation .btn{height:33px}.room-scope{font-size:10px;color:#8da0b5;margin-left:auto}.room-scope strong{font-weight:500;color:#4e6d91;margin-left:6px}.room-menu{position:relative;margin-left:6px;color:#607e9f;font-size:11px}.room-menu summary{cursor:pointer;list-style:none;padding:8px}.room-menu>div{position:absolute;top:34px;right:0;background:#fff;border:1px solid #dce7f4;border-radius:10px;min-width:165px;padding:5px;box-shadow:0 7px 20px #16345b1c;z-index:30}.room-menu button{display:block;background:none;width:100%;padding:10px;text-align:left;color:#3e5c80;border-radius:6px;font-size:11px}.room-menu button:hover{background:#edf4ff}.room-menu #delete-room,.room-menu #delete-floor{color:#a45e4a}.workspace{height:calc(100dvh - 210px);min-height:610px;grid-template-columns:294px minmax(330px,1fr) 254px}.section-title{font-size:18px}.left-panel{padding:19px 17px}.left-panel .section-subtitle{font-size:10px;margin-bottom:12px}.room-fields{margin-top:12px}.room-note{font-size:9px}.product-card{padding:10px}.product-bottom{margin-top:9px}.quote-tag{color:#496a91;font-weight:600}.purchase-row{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;margin-top:7px;border-top:1px solid #e8eef5;padding-top:7px;font-size:10px;color:#65809f}.purchase-row .stepper{background:#f7f9fc}.purchase-row input{width:35px;background:#f8fbff}.stock-note{grid-column:1/-1;font-size:9px;color:#7b8fa6;margin-top:7px;line-height:1.4}.product-meta{font-size:9px}.scene-heading h1{font-size:22px}.canvas-stage{min-height:330px}.right-panel{padding:20px 17px}.right-panel .utility-actions{gap:6px}.right-panel .btn{font-size:10px}.scene-heading p{font-size:11px}.building-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(15px);opacity:0;pointer-events:none;z-index:200;background:#183d63;border:1px solid #365a7c;box-shadow:0 8px 28px #1b365c29;color:white;border-radius:10px;padding:13px 18px;max-width:min(660px,95vw);font-size:12px;line-height:1.6;transition:.18s}.building-toast.show{opacity:1;transform:translateX(-50%)}.building-toast.error{background:#82513e;border-color:#a67863}.error-text{color:#ad4f3e;font-size:12px;line-height:1.7}.success-text{color:#2b7f62;font-size:12px;line-height:1.7}.large-dialog{max-width:850px;max-height:85dvh;overflow:auto}.floor-card{border:1px solid #e1e9f3;border-radius:12px;padding:16px;margin-bottom:13px;background:#fafcff}.floor-card h3{margin:0 0 12px;font-size:14px;display:flex;justify-content:space-between}.floor-card h3>span{font-size:10px;color:#8aa0b9;font-weight:500}.room-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.room-card{background:white;border:1px solid #dee8f5;border-radius:8px;text-align:left;padding:12px;display:flex;flex-direction:column;gap:7px;color:#3a5a80;min-width:0}.room-card.current{border-color:#75a4e3;background:#eef5ff}.room-card:hover{background:#edf4fd}.room-card strong{font-size:12px;word-break:break-word}.room-card span{font-size:10px;color:#758ba6}.room-card small{font-size:9px;color:#7f9aba}.inventory-heading{font-size:15px;margin:22px 0 8px}.inventory-table{width:100%;border-collapse:collapse;font-size:11px}.inventory-table th,.inventory-table td{padding:11px 10px;border-bottom:1px solid #e5ecf4;text-align:right}.inventory-table th:first-child{text-align:left;font-weight:500}.inventory-table thead th{color:#758da8;font-size:10px}.inventory-table tbody td:last-child{color:#337c66;font-weight:600}.table-scroll{overflow:auto}.muted-note{font-size:10px;color:#8da0b4}.building-api-note{border-left:3px solid #9abbe6;padding-left:10px}
+@media(min-width:1600px){.workspace{grid-template-columns:320px minmax(340px,1fr) 275px}.left-panel{padding:24px}.product-card{padding:13px}.product-name{font-size:12px}.product-meta{font-size:10px}}
+@media(max-width:1170px){.workspace{grid-template-columns:260px minmax(300px,1fr) 220px}.building-bar{padding-left:18px;padding-right:18px}.room-scope{display:none}.building-metrics{gap:17px}.header-actions .btn{font-size:11px}.right-panel{padding:16px 12px}}
+@media(max-width:950px){.workspace{grid-template-columns:260px minmax(320px,1fr)}.right-panel{display:none}.header-actions .btn:not(.primary){display:inline-flex}.building-identity #building-summary{display:none}.building-metrics{gap:12px}.building-metrics .btn{font-size:10px;padding:9px}.building-metrics span{font-size:9px}.room-navigation select{min-width:135px;max-width:180px}.room-navigation label[for=room-select]{margin-left:0}.building-identity strong{font-size:17px}}
+@media(max-width:680px){header{height:auto;min-height:65px;padding:12px;gap:10px}.header-actions{gap:5px}.header-actions .btn{padding:8px;font-size:9px}.header-actions .btn svg{display:none}.brand-name{font-size:20px}.brand-mark{width:32px;height:32px}.brand-caption{font-size:6px}.breadcrumb{display:none}.building-bar{padding:12px;grid-template-columns:1fr;gap:12px}.building-metrics{justify-content:space-between}.building-metrics strong{font-size:19px}.room-navigation{flex-wrap:wrap}.room-navigation label{flex:1}.room-navigation select{flex:1;min-width:110px;max-width:none}.room-menu{margin-left:auto}.room-scope{display:none}.workspace{height:auto;display:flex;flex-direction:column;min-height:0}.scene-panel{order:-1;height:540px;min-height:540px}.left-panel{padding:20px}.left-panel .catalogue{display:grid;grid-template-columns:1fr 1fr;gap:10px}.canvas-stage{min-height:280px}.right-panel{display:block;padding:20px}.right-panel #selection-panel{max-width:500px}.right-panel .selected-visual{display:none}.room-card-grid{grid-template-columns:1fr 1fr}.room-menu>div{right:0}.large-dialog{padding:17px}.building-identity #building-summary{display:inline}.live-pill{font-size:8px;padding:6px}.scene-heading{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="brand-mark" data-icon="logo"></div><div><div class="brand-name">clinic<span>.exe</span></div><div class="brand-caption">EQUIPMENT PLANNING</div></div></div>
+  <div class="breadcrumb"><span>Your clinic</span><span> / </span><strong>Building Studio</strong><span class="pill">PROTOTYPE</span></div>
+  <div class="header-actions"><span class="save-state" id="save-state"><i class="status-dot"></i><span id="save-text">Local workspace</span></span><button class="btn" id="integration-button"><span data-icon="code"></span>Team API</button><button class="btn primary" id="export-button"><span data-icon="download"></span>Export building</button></div>
+</header>
+<section class="building-bar" aria-label="Building and room navigation">
+  <div class="building-identity"><span class="building-kicker">BUILDING WORKSPACE</span><div><strong id="building-name">My Clinic</strong><button id="edit-building-name" class="text-button" aria-label="Rename building">Edit name</button><span id="building-summary">2 floors · 3 rooms</span></div></div>
+  <div class="building-metrics"><div><strong id="purchase-count">9</strong><span>Selected to buy</span></div><div><strong id="placed-count">5</strong><span>Placed</span></div><div class="available-metric"><strong id="unplaced-count">4</strong><span>Unplaced</span></div><button class="btn" id="overview-button">Building overview ↗</button></div>
+  <div class="room-navigation"><label for="floor-select">Floor<select id="floor-select" aria-label="Active floor"></select></label><button id="add-floor" class="btn small">+ Floor</button><label for="room-select">Room<select id="room-select" aria-label="Active room"></select></label><button id="add-room" class="btn small">+ Room</button><details class="room-menu"><summary>Manage ▾</summary><div><button id="rename-floor">Rename floor</button><button id="rename-room">Rename room</button><button id="delete-room">Delete room</button><button id="delete-floor">Delete floor</button><button id="reset-building">Reset demonstration</button></div></details><span class="room-scope">Editing <strong id="scope-label">Ground floor / Exam Room 101</strong></span></div>
+</section>
+
+<main class="workspace">
+<aside class="sidebar left-panel">
+  <div class="eyebrow">Select, then place</div><h2 class="section-title">Equipment for every room.</h2><p class="section-subtitle" id="room-context-note">Purchase quantities are building-wide. Place available items in this room.</p>
+  <label hidden class="field-label" for="preset">STARTING POINT</label><select hidden class="field-select" id="preset"><option value="general">General examination · demo</option><option value="optometry">Optometry · two-item demo</option><option value="empty">Start with an empty room</option><option value="custom" disabled>Custom equipment selection</option></select>
+  <div class="room-fields"><label><span class="field-label">Width</span><span class="input-unit"><input id="room-width" aria-label="Room width in metres" type="number" min="3" max="14" step="0.1" value="6"><span>m</span></span></label><label><span class="field-label">Depth</span><span class="input-unit"><input id="room-depth" aria-label="Room depth in metres" type="number" min="3" max="14" step="0.1" value="5"><span>m</span></span></label><button class="icon-btn" id="apply-room" aria-label="Apply room dimensions" title="Apply room dimensions"><span data-icon="check"></span></button></div>
+  <p class="room-note">Inside dimensions · 3–14 m per side</p><hr class="section-divider">
+  <div class="catalogue-heading"><h2>Equipment catalogue</h2><span class="pill" id="catalogue-count">CATALOGUE ITEMS</span></div><div class="catalogue" id="catalogue"></div>
+  <p class="left-footer">Removing a placement returns it to Unplaced.<br>Purchase totals never change when switching rooms.<br>All product dimensions remain illustrative.</p>
+</aside>
+<section class="scene-panel" aria-label="Interactive 3D room">
+  <div class="scene-heading"><div><div class="eyebrow">Arrange & explore</div><h1>Your clinic, in perspective.</h1><p>One room. Your equipment. A clearer plan.</p></div><div class="live-pill"><span></span>LIVE 3D</div></div>
+  <div class="canvas-toolbar"><div class="segmented"><button id="view-3d" class="active"><span data-icon="cube"></span>3D view</button><button id="view-top"><span data-icon="grid"></span>Top view</button></div><div class="tool-icons"><button class="icon-btn" id="undo-button" aria-label="Undo last change" title="Undo last change"><span data-icon="undo"></span></button><button class="icon-btn" id="zoom-out" aria-label="Zoom out" title="Zoom out"><span data-icon="minus"></span></button><button class="icon-btn" id="zoom-in" aria-label="Zoom in" title="Zoom in"><span data-icon="plus"></span></button><button class="icon-btn" id="fit-button" aria-label="Fit room in view" title="Fit room in view"><span data-icon="frame"></span></button></div></div>
+  <div class="canvas-stage" id="stage"><canvas id="room-canvas" tabindex="0" aria-label="3D clinic. Drag equipment to move it. Drag empty space to orbit. R rotates selected equipment. Delete removes selected equipment."></canvas><div class="scene-badge"><span><strong id="area-badge">30</strong> m²</span><span><strong id="count-badge">4</strong> items</span></div><div class="dimension-tag" id="width-tag"></div><div class="dimension-tag" id="depth-tag"></div><div class="selected-label" id="selected-label" hidden></div><div class="stage-instructions"><span><span data-icon="move"></span>Drag equipment to move</span><span><span data-icon="orbit"></span>Drag empty space to orbit</span><span><span data-icon="zoom"></span>Scroll to zoom</span></div><div class="fatal" id="fatal" hidden><div><h2>The 3D view could not start.</h2><p>Download this HTML file and open it directly in Chrome, Edge or Safari. A chat file preview may block scripts.</p><p>Keep hardware acceleration enabled. No internet connection is required.</p><code id="fatal-error"></code></div></div></div>
+  <div class="view-options"><div class="checks"><label class="check-label"><input id="grid-toggle" type="checkbox" checked>Grid</label><label class="check-label"><input id="walls-toggle" type="checkbox" checked>Walls</label><label class="check-label"><input id="snap-toggle" type="checkbox" checked>Snap 0.1 m</label></div><span class="view-note">Drag to place · R to rotate · Delete to remove</span></div>
+</section>
+<aside class="sidebar right-panel">
+  <div class="eyebrow">Fine-tune your layout</div><div class="inspector-head">Selected equipment</div>
+  <div id="selection-empty" class="empty-selection"><span data-icon="cursor"></span>Click any equipment in the room<br>to move, rotate or remove it.</div>
+  <div id="selection-panel" hidden><div class="selected-visual" id="selected-icon"></div><h3 class="selected-name" id="selected-name"></h3><div class="selected-id" id="selected-id"></div><div class="dimension-row"><span>Footprint</span><strong id="selected-dimensions"></strong></div><div class="dimension-row"><span>Dimensions source</span><strong>Demo estimate</strong></div><div class="control-label">POSITION FROM ROOM CENTRE</div><div class="xy-fields"><label><span class="field-label">X · left / right</span><span class="input-unit"><input id="position-x" type="number" step="0.1" aria-label="Equipment X position"><span>m</span></span></label><label><span class="field-label">Z · front / back</span><span class="input-unit"><input id="position-z" type="number" step="0.1" aria-label="Equipment Z position"><span>m</span></span></label></div><div class="rotation-row"><span class="rotation-value" id="rotation-value">Rotation: 0°</span><button id="rotate-button" class="btn small"><span data-icon="rotate"></span>Rotate 90°</button></div><div class="selection-actions"><button id="duplicate-button" class="btn"><span data-icon="copy"></span>Duplicate</button><button id="remove-button" class="btn danger"><span data-icon="trash"></span>Unplace</button></div><button class="btn wide" id="move-room-button" style="margin-top:10px">Move to another room ↗</button></div>
+  <div class="plan-summary"><div class="inspector-head">Room overview</div><div class="summary-line"><span>Room area</span><strong id="area-summary">30 m²</strong></div><div class="summary-line"><span>Equipment</span><strong id="items-summary">4 items</strong></div><div class="summary-line"><span>Pricing</span><strong>Sales quote required</strong></div><div class="layout-status" id="layout-status"><div class="status-title"><span data-icon="check"></span><span id="status-title">No footprint overlaps</span></div><p id="status-description">A geometric check only. Operational clearances are not assessed.</p></div><div class="utility-actions"><button class="btn wide" id="arrange-button"><span data-icon="spark"></span>Auto-arrange equipment</button><button class="btn wide" id="import-button"><span data-icon="upload"></span>Import building JSON</button><button class="btn wide" id="snapshot-button"><span data-icon="camera"></span>Save 3D view as PNG</button></div><p class="disclaimer"><strong>Planning preview, not a clinical standard.</strong> Sizes, layouts and models are illustrative. Verify real product dimensions, access needs and manufacturer clearances before purchase.</p></div>
+</aside>
+</main>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<dialog id="integration-dialog"><div class="dialog-header"><h2>Connect your equipment list.</h2><button class="icon-btn" id="close-integration" aria-label="Close"><span data-icon="close"></span></button></div><div class="dialog-body"><p>This is the 3D module, not an AI chatbot. Send the <strong>complete current list</strong> after each customer choice. Omitted products are removed; existing placements are preserved.</p><pre>window.ClinicPlanner.updateEquipment([
+  { productId: "exam-chair", quantity: 1 },
+  { productId: "slit-lamp", quantity: 1 }
+]);</pre><p>Try the same data here. This updates the actual room, not a mock screen.</p><textarea id="equipment-json" spellcheck="false" aria-label="Equipment JSON">[
+  { "productId": "exam-chair", "quantity": 1 },
+  { "productId": "slit-lamp", "quantity": 1 }
+]</textarea><p>Supported IDs: <code>exam-table</code>, <code>exam-chair</code>, <code>slit-lamp</code>, <code>stool</code>, <code>cabinet</code>, <code>monitor</code>. Integer quantities: 0–8; maximum 24 items.</p><p>For an iframe, use the tested bridge in <code>integration-demo.html</code>. No API key or customer information is needed.</p></div><div class="dialog-actions"><button class="btn" id="copy-api">Copy example</button><button class="btn primary" id="apply-json">Apply to 3D room</button></div></dialog>
+<input type="file" id="building-file" accept=".json,application/json" hidden>
+<div id="building-toast" class="building-toast" role="status" aria-live="polite"></div>
+<dialog id="name-dialog"><form id="name-form"><div class="dialog-header"><h2 id="name-title">Name</h2></div><p class="dialog-body">Names help your team navigate. Internal IDs remain unchanged.</p><label class="field-label" for="name-input">DISPLAY NAME</label><input class="field-input" id="name-input" required maxlength="80" autocomplete="off"><p id="name-error" class="error-text" role="alert"></p><div class="dialog-actions"><button type="button" class="btn" id="name-cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></dialog>
+<dialog id="overview-dialog" class="large-dialog"><div class="dialog-header"><div><div class="eyebrow">All floors, one plan</div><h2>Building overview</h2></div><button class="btn small" id="overview-close">Close</button></div><p class="dialog-body" id="overview-totals"></p><div id="floor-cards"></div><h3 class="inventory-heading">Purchase selection ≠ room placement</h3><p class="dialog-body">Unplaced equipment still belongs in the purchase request. Deleting a room or unplacing an item never reduces the purchase total.</p><div class="table-scroll"><table class="inventory-table"><thead><tr><th>Equipment</th><th>Purchase</th><th>Placed</th><th>Unplaced</th></tr></thead><tbody id="inventory-body"></tbody></table></div><div class="dialog-actions"><button id="quote-summary-button" class="btn primary">Export request draft (.txt)</button></div><p class="dialog-body muted-note">Independent room layouts only. No corridors, stacked building model, structural checks or quote submission.</p></dialog>
+<dialog id="move-dialog"><form id="move-form"><div class="dialog-header"><h2>Move to another room</h2></div><p class="dialog-body">Move the selected equipment instance. The source loses one placement and the destination gains one; purchase quantities do not change. Its position is automatically chosen in the destination room.</p><label class="field-label" for="move-target">DESTINATION</label><select class="field-select" id="move-target"></select><p id="move-error" class="error-text" role="alert"></p><div class="dialog-actions"><button type="button" id="move-cancel" class="btn">Cancel</button><button type="submit" class="btn primary">Move equipment</button></div></form></dialog>
+<dialog id="building-api-dialog"><div class="dialog-header"><div><div class="eyebrow">For your chatbot & main application</div><h2>Send a room-scoped selection.</h2></div><button class="btn small" id="building-api-close">Close</button></div><div class="dialog-body"><p><code>window.ClinicBuilding.updateRoomEquipment(data)</code> receives the complete placement list for one identified room. It does not change other rooms or purchase totals.</p><p>Set building-wide purchase quantities first with <code>setPurchaseSelection(items)</code>. The room cannot place more units than are selected and available.</p><textarea id="building-api-json" aria-label="Scoped room update JSON" spellcheck="false"></textarea><p id="api-result" role="status"></p><p>For a same-origin iframe use <code>clinic:building:command</code>. The project includes <code>integration-demo.html</code>. This is not an MCP server or a live AI chatbot.</p></div><div class="dialog-actions"><button class="btn primary" id="building-api-apply">Apply to target room</button></div></dialog>
+
+<noscript>This planner needs JavaScript enabled. Open the downloaded HTML file in a browser.</noscript>
+<script>window.CLINIC_BUILDING_MODE = true;
+/* Clinic.exe — small, dependency-free WebGL renderer.
+ * All equipment is actual 3D geometry. No images or remote libraries are loaded.
+ * Rendering is intentionally separate from catalogue and application state.
+ */
+(function () {
+  'use strict';
+  const V = {
+    sub: (a,b) => a.map((v,i)=>v-b[i]),
+    add: (a,b) => a.map((v,i)=>v+b[i]),
+    scale: (a,s) => a.map(v=>v*s),
+    dot: (a,b) => a.reduce((s,v,i)=>s+v*b[i],0),
+    cross: (a,b) => [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],
+    norm: a => { const l=Math.hypot(...a)||1; return a.map(v=>v/l); }
+  };
+  const M = {
+    identity: () => [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+    multiply(a,b) { const o=new Array(16).fill(0); for(let c=0;c<4;c++) for(let r=0;r<4;r++) for(let k=0;k<4;k++) o[c*4+r]+=a[k*4+r]*b[c*4+k]; return o; },
+    translate(x,y,z) { const m=M.identity(); m[12]=x;m[13]=y;m[14]=z;return m; },
+    scale(x,y,z) { const m=M.identity();m[0]=x;m[5]=y;m[10]=z;return m; },
+    rx(a) {const c=Math.cos(a),s=Math.sin(a);return [1,0,0,0,0,c,s,0,0,-s,c,0,0,0,0,1];},
+    ry(a) {const c=Math.cos(a),s=Math.sin(a);return [c,0,-s,0,0,1,0,0,s,0,c,0,0,0,0,1];},
+    rz(a) {const c=Math.cos(a),s=Math.sin(a);return [c,s,0,0,-s,c,0,0,0,0,1,0,0,0,0,1];},
+    perspective(fov,aspect,near,far) {const f=1/Math.tan(fov/2),n=1/(near-far);return [f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*n,-1,0,0,2*far*near*n,0];},
+    ortho(l,r,b,t,n,f) {return [2/(r-l),0,0,0,0,2/(t-b),0,0,0,0,-2/(f-n),0,-(r+l)/(r-l),-(t+b)/(t-b),-(f+n)/(f-n),1];},
+    lookAt(eye,target,up) { const z=V.norm(V.sub(eye,target)),x=V.norm(V.cross(up,z)),y=V.cross(z,x); return [x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-V.dot(x,eye),-V.dot(y,eye),-V.dot(z,eye),1]; },
+    transform(m,p) { const q=[...p.slice(0,3),p.length===4?p[3]:1],o=[];for(let r=0;r<4;r++)o[r]=m[r]*q[0]+m[4+r]*q[1]+m[8+r]*q[2]+m[12+r]*q[3];return o; },
+    inverse(m) {
+      const a=Array.from({length:4},(_,r)=>[m[r],m[4+r],m[8+r],m[12+r],...Array.from({length:4},(_,c)=>r===c?1:0)]);
+      for(let i=0;i<4;i++) {let p=i;for(let j=i+1;j<4;j++)if(Math.abs(a[j][i])>Math.abs(a[p][i]))p=j;if(Math.abs(a[p][i])<1e-10)return M.identity();[a[i],a[p]]=[a[p],a[i]];const d=a[i][i];a[i]=a[i].map(v=>v/d);for(let j=0;j<4;j++)if(j!==i){const k=a[j][i];a[j]=a[j].map((v,c)=>v-k*a[i][c]);}}
+      return Array.from({length:16},(_,i)=>a[i%4][4+Math.floor(i/4)]);
+    },
+    normal(m) {const i=M.inverse(m);return [i[0],i[4],i[8],i[1],i[5],i[9],i[2],i[6],i[10]];},
+    compose(pos=[0,0,0],size=[1,1,1],rot=[0,0,0]) {let m=M.translate(...pos);m=M.multiply(m,M.ry(rot[1]));m=M.multiply(m,M.rx(rot[0]));m=M.multiply(m,M.rz(rot[2]));return M.multiply(m,M.scale(...size));}
+  };
+  function hex(s) {return [parseInt(s.slice(1,3),16)/255,parseInt(s.slice(3,5),16)/255,parseInt(s.slice(5,7),16)/255];}
+  function boxMesh() {
+    const p=[],n=[];
+    const faces=[[[1,0,0],[[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5],[.5,-.5,.5]]],[[-1,0,0],[[-.5,-.5,.5],[-.5,.5,.5],[-.5,.5,-.5],[-.5,-.5,-.5]]],[[0,1,0],[[-.5,.5,-.5],[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5]]],[[0,-1,0],[[-.5,-.5,.5],[-.5,-.5,-.5],[.5,-.5,-.5],[.5,-.5,.5]]],[[0,0,1],[[.5,-.5,.5],[.5,.5,.5],[-.5,.5,.5],[-.5,-.5,.5]]],[[0,0,-1],[[-.5,-.5,-.5],[-.5,.5,-.5],[.5,.5,-.5],[.5,-.5,-.5]]]];
+    for(const [normal,verts] of faces)for(const i of [0,1,2,0,2,3]){p.push(...verts[i]);n.push(...normal);}return {p,n};
+  }
+  function cylinderMesh() {
+    const p=[],n=[],segments=24;
+    for(let i=0;i<segments;i++){const a=i/segments*Math.PI*2,b=(i+1)/segments*Math.PI*2;const va=[Math.cos(a)*.5,Math.sin(a)*.5],vb=[Math.cos(b)*.5,Math.sin(b)*.5];
+      const verts=[[va[0],-.5,va[1]],[va[0],.5,va[1]],[vb[0],.5,vb[1]],[vb[0],-.5,vb[1]]];
+      for(const j of [0,1,2,0,2,3]){p.push(...verts[j]);const v=j<2?va:vb;n.push(v[0]*2,0,v[1]*2);}
+      p.push(0,.5,0,vb[0],.5,vb[1],va[0],.5,va[1]);n.push(0,1,0,0,1,0,0,1,0);
+      p.push(0,-.5,0,va[0],-.5,va[1],vb[0],-.5,vb[1]);n.push(0,-1,0,0,-1,0,0,-1,0);
+    }return {p,n};
+  }
+  class Renderer {
+    constructor(canvas) {
+      this.canvas=canvas;
+      const gl=canvas.getContext('webgl',{antialias:true,alpha:true,preserveDrawingBuffer:true});
+      if(!gl)return new SoftwareRenderer(canvas);
+      this.gl=gl;this.mode='webgl';this.commands=[];this.lines=[];this.room={width:6,depth:5};this.target=[0,.65,0];this.azimuth=.67;this.elevation=.68;this.distance=12;this.showWalls=true;this.showGrid=true;this.shadowDirty=true;this.pending=false;this.onRender=null;
+      const vertex=`attribute vec3 aPosition;attribute vec3 aNormal;uniform mat4 uModel;uniform mat4 uVP;uniform mat4 uLight;uniform mat3 uNormal;varying vec3 vNormal;varying vec4 vShadow;void main(){vec4 world=uModel*vec4(aPosition,1.0);vNormal=normalize(uNormal*aNormal);vShadow=uLight*world;gl_Position=uVP*world;}`;
+      const frag=`precision highp float;uniform vec3 uColor;uniform sampler2D uShadowMap;uniform float uShadowEnabled;uniform float uUnlit;varying vec3 vNormal;varying vec4 vShadow;
+      float unpackDepth(vec4 rgba){return dot(rgba,vec4(1.0/16777216.0,1.0/65536.0,1.0/256.0,1.0));}
+      void main(){vec3 n=normalize(vNormal);vec3 light=normalize(vec3(0.45,0.9,0.55));float diffuse=max(dot(n,light),0.0);float visibility=1.0;vec3 p=vShadow.xyz/vShadow.w*0.5+0.5;
+      if(uShadowEnabled>0.5&&p.x>0.0&&p.x<1.0&&p.y>0.0&&p.y<1.0&&p.z<1.0){float sum=0.0;float bias=max(0.0015,0.004*(1.0-diffuse));for(int x=-1;x<=1;x++){for(int y=-1;y<=1;y++){float depth=unpackDepth(texture2D(uShadowMap,p.xy+vec2(float(x),float(y))/1024.0));sum+=(p.z-bias>depth)?0.0:1.0;}}visibility=0.48+0.52*sum/9.0;}
+      float hemi=0.68+0.10*n.y;float shade=(hemi+0.28*diffuse*visibility)*mix(0.87,1.0,visibility);vec3 c=uColor*mix(shade,1.0,uUnlit);gl_FragColor=vec4(c,1.0);}`;
+      const shadowVert=`attribute vec3 aPosition;uniform mat4 uModel;uniform mat4 uVP;void main(){gl_Position=uVP*uModel*vec4(aPosition,1.0);}`;
+      const shadowFrag=`precision highp float;vec4 packDepth(float depth){vec4 enc=fract(depth*vec4(16777216.0,65536.0,256.0,1.0));enc-=enc.xxyz*vec4(0.0,1.0/256.0,1.0/256.0,1.0/256.0);return enc;}void main(){gl_FragColor=packDepth(gl_FragCoord.z);}`;
+      this.program=this.createProgram(vertex,frag);this.shadowProgram=this.createProgram(shadowVert,shadowFrag);
+      this.meshes={box:this.upload(boxMesh()),cylinder:this.upload(cylinderMesh())};
+      this.lineBuffer=gl.createBuffer();this.normalBuffer=gl.createBuffer();
+      this.initShadow();
+      gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
+      this.resizeObserver=new ResizeObserver(()=>{this.resize();this.requestRender();});this.resizeObserver.observe(canvas);
+      this.resize();
+    }
+    createProgram(v,f) {const g=this.gl;const compile=(type,src)=>{const s=g.createShader(type);g.shaderSource(s,src);g.compileShader(s);if(!g.getShaderParameter(s,g.COMPILE_STATUS))throw new Error(g.getShaderInfoLog(s));return s;};const p=g.createProgram();g.attachShader(p,compile(g.VERTEX_SHADER,v));g.attachShader(p,compile(g.FRAGMENT_SHADER,f));g.linkProgram(p);if(!g.getProgramParameter(p,g.LINK_STATUS))throw new Error(g.getProgramInfoLog(p));const uniforms={};for(const n of ['uModel','uVP','uLight','uNormal','uColor','uShadowMap','uShadowEnabled','uUnlit'])uniforms[n]=g.getUniformLocation(p,n);return {p,uniforms,pos:g.getAttribLocation(p,'aPosition'),normal:g.getAttribLocation(p,'aNormal')};}
+    upload(mesh) {const g=this.gl;const upload=(a)=>{const b=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,b);g.bufferData(g.ARRAY_BUFFER,new Float32Array(a),g.STATIC_DRAW);return b;};return {p:upload(mesh.p),n:upload(mesh.n),count:mesh.p.length/3};}
+    initShadow() {const g=this.gl;this.shadowTex=g.createTexture();g.bindTexture(g.TEXTURE_2D,this.shadowTex);g.texImage2D(g.TEXTURE_2D,0,g.RGBA,1024,1024,0,g.RGBA,g.UNSIGNED_BYTE,null);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE);this.shadowFB=g.createFramebuffer();g.bindFramebuffer(g.FRAMEBUFFER,this.shadowFB);g.framebufferTexture2D(g.FRAMEBUFFER,g.COLOR_ATTACHMENT0,g.TEXTURE_2D,this.shadowTex,0);const rb=g.createRenderbuffer();g.bindRenderbuffer(g.RENDERBUFFER,rb);g.renderbufferStorage(g.RENDERBUFFER,g.DEPTH_COMPONENT16,1024,1024);g.framebufferRenderbuffer(g.FRAMEBUFFER,g.DEPTH_ATTACHMENT,g.RENDERBUFFER,rb);this.shadows=g.checkFramebufferStatus(g.FRAMEBUFFER)===g.FRAMEBUFFER_COMPLETE;g.bindFramebuffer(g.FRAMEBUFFER,null);}
+    resize(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.round(this.canvas.clientWidth*d)),h=Math.max(1,Math.round(this.canvas.clientHeight*d));if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;}this.updateMatrices();}
+    updateMatrices() {const r=this.distance,el=this.elevation,az=this.azimuth;this.eye=V.add(this.target,[r*Math.cos(el)*Math.sin(az),r*Math.sin(el),r*Math.cos(el)*Math.cos(az)]);this.view=M.lookAt(this.eye,this.target,[0,1,0]);this.projection=M.perspective(Math.PI/4,this.canvas.width/this.canvas.height,.05,200);this.vp=M.multiply(this.projection,this.view);this.inverseVP=M.inverse(this.vp);const ext=Math.max(this.room.width,this.room.depth)*.83+3;this.lightVP=M.multiply(M.ortho(-ext,ext,-ext,ext,1,65),M.lookAt([14,26,18],[0,0,0],[0,1,0]));}
+    home(top=false) {this.target=[0,top?0:.6,0];this.azimuth=top?0:.67;this.elevation=top?Math.PI/2-.002:.68;const radius=Math.hypot(this.room.width,this.room.depth)/2;const aspect=this.canvas.clientWidth/Math.max(1,this.canvas.clientHeight);this.distance=radius/.383*Math.max(1,1/aspect)*1.02;this.requestRender();}
+    requestRender() {if(!this.pending){this.pending=true;requestAnimationFrame(()=>{this.pending=false;this.render();});}}
+    setScene(commands,lines,room) {this.commands=commands;this.lines=lines;this.room=room;this.shadowDirty=true;this.requestRender();}
+    wallVisible(command) {if(!command.wall)return true;if(!this.showWalls||this.elevation>1.42)return false;return command.wall==='back'?this.eye[2]>0:this.eye[0]>0;}
+    draw(c,p,shadow=false) {const g=this.gl,mesh=this.meshes[c.shape||'box'];g.bindBuffer(g.ARRAY_BUFFER,mesh.p);g.vertexAttribPointer(p.pos,3,g.FLOAT,false,0,0);g.enableVertexAttribArray(p.pos);g.uniformMatrix4fv(p.uniforms.uModel,false,c.matrix);if(!shadow){g.bindBuffer(g.ARRAY_BUFFER,mesh.n);g.vertexAttribPointer(p.normal,3,g.FLOAT,false,0,0);g.enableVertexAttribArray(p.normal);g.uniformMatrix3fv(p.uniforms.uNormal,false,c.normal||(c.normal=M.normal(c.matrix)));g.uniform3fv(p.uniforms.uColor,c.color);g.uniform1f(p.uniforms.uUnlit,c.unlit?1:0);}g.drawArrays(g.TRIANGLES,0,mesh.count);}
+    render(){const g=this.gl;this.updateMatrices();const visible=this.commands.filter(c=>this.wallVisible(c));const wallKey=visible.filter(c=>c.wall).map(c=>c.wall).join();if(wallKey!==this.wallKey){this.shadowDirty=true;this.wallKey=wallKey;}
+      if(this.shadowDirty&&this.shadows){g.bindFramebuffer(g.FRAMEBUFFER,this.shadowFB);g.viewport(0,0,1024,1024);g.clearColor(1,1,1,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);g.useProgram(this.shadowProgram.p);g.uniformMatrix4fv(this.shadowProgram.uniforms.uVP,false,this.lightVP);for(const c of visible)if(!c.noShadow)this.draw(c,this.shadowProgram,true);g.bindFramebuffer(g.FRAMEBUFFER,null);this.shadowDirty=false;}
+      g.viewport(0,0,this.canvas.width,this.canvas.height);g.clearColor(0,0,0,0);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);g.useProgram(this.program.p);const u=this.program.uniforms;g.uniformMatrix4fv(u.uVP,false,this.vp);g.uniformMatrix4fv(u.uLight,false,this.lightVP);g.uniform1f(u.uShadowEnabled,this.shadows?1:0);g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,this.shadowTex);g.uniform1i(u.uShadowMap,0);for(const c of visible)this.draw(c,this.program);
+      for(const line of this.lines){if(line.grid&&!this.showGrid)continue;g.bindBuffer(g.ARRAY_BUFFER,this.lineBuffer);g.bufferData(g.ARRAY_BUFFER,new Float32Array(line.points),g.DYNAMIC_DRAW);g.vertexAttribPointer(this.program.pos,3,g.FLOAT,false,0,0);g.enableVertexAttribArray(this.program.pos);g.disableVertexAttribArray(this.program.normal);g.vertexAttrib3f(this.program.normal,0,1,0);g.uniformMatrix4fv(u.uModel,false,M.identity());g.uniformMatrix3fv(u.uNormal,false,[1,0,0,0,1,0,0,0,1]);g.uniform3fv(u.uColor,line.color);g.uniform1f(u.uUnlit,1);g.drawArrays(g.LINES,0,line.points.length/3);}
+      this.onRender?.();
+    }
+    ray(clientX,clientY){this.updateMatrices();const rect=this.canvas.getBoundingClientRect(),x=(clientX-rect.left)/rect.width*2-1,y=1-(clientY-rect.top)/rect.height*2;const unproject=z=>{const p=M.transform(this.inverseVP,[x,y,z,1]);return p.slice(0,3).map(v=>v/p[3]);};const start=unproject(-1),end=unproject(1);return {start,direction:V.norm(V.sub(end,start))};}
+    floorPoint(clientX,clientY){const ray=this.ray(clientX,clientY);if(Math.abs(ray.direction[1])<1e-6)return null;const t=-ray.start[1]/ray.direction[1];return t>0?V.add(ray.start,V.scale(ray.direction,t)):null;}
+    project(p){this.updateMatrices();const q=M.transform(this.vp,p),r=this.canvas.getBoundingClientRect();return {x:r.left+(q[0]/q[3]+1)*r.width/2,y:r.top+(1-q[1]/q[3])*r.height/2,visible:q[3]>0};}
+    pick(clientX,clientY,instances,catalogue){const ray=this.ray(clientX,clientY);let best=null,distance=Infinity;for(const item of instances){const def=catalogue.find(d=>d.id===item.productId),rot=M.ry(-item.rotation*Math.PI/180);const origin=M.transform(rot,[ray.start[0]-item.x,ray.start[1],ray.start[2]-item.z,1]);const direction=M.transform(rot,[...ray.direction,0]);const min=[-def.width/2,0,-def.depth/2],max=[def.width/2,def.height,def.depth/2];let near=0,far=Infinity;for(let a=0;a<3;a++){if(Math.abs(direction[a])<1e-7){if(origin[a]<min[a]||origin[a]>max[a]){near=Infinity;break;}}else{let t1=(min[a]-origin[a])/direction[a],t2=(max[a]-origin[a])/direction[a];if(t1>t2)[t1,t2]=[t2,t1];near=Math.max(near,t1);far=Math.min(far,t2);}}if(near<=far&&near<distance){best=item;distance=near;}}return best;}
+  }
+
+  /* Software fallback with a real depth buffer. It renders the same triangles
+   * and perspective camera as WebGL, so overlapping geometry is correctly hidden.
+   */
+  class SoftwareRenderer {
+    constructor(canvas) {
+      this.canvas=canvas;this.ctx=canvas.getContext('2d');
+      if(!this.ctx)throw new Error('Neither WebGL nor Canvas is available in this browser.');
+      this.mode='software';this.gl=null;this.commands=[];this.lines=[];this.room={width:6,depth:5};this.target=[0,.65,0];this.azimuth=.67;this.elevation=.68;this.distance=12;this.showWalls=true;this.showGrid=true;this.pending=false;this.onRender=null;
+      this.meshes={box:boxMesh(),cylinder:cylinderMesh()};this.triangles=[];
+      this.resizeObserver=new ResizeObserver(()=>{this.resize();this.requestRender();});this.resizeObserver.observe(canvas);this.resize();
+    }
+    setScene(commands,lines,room) {
+      this.commands=commands;this.lines=lines;this.room=room;this.triangles=[];
+      for(const command of commands) {
+        const mesh=this.meshes[command.shape||'box'],normalMatrix=M.normal(command.matrix);
+        const normal=p=>V.norm([normalMatrix[0]*p[0]+normalMatrix[3]*p[1]+normalMatrix[6]*p[2],normalMatrix[1]*p[0]+normalMatrix[4]*p[1]+normalMatrix[7]*p[2],normalMatrix[2]*p[0]+normalMatrix[5]*p[1]+normalMatrix[8]*p[2]]);
+        for(let i=0;i<mesh.p.length;i+=9) {
+          const vertices=[0,3,6].map(o=>M.transform(command.matrix,mesh.p.slice(i+o,i+o+3)).slice(0,3));
+          const n=normal(mesh.n.slice(i,i+3));const center=[0,1,2].map(axis=>vertices.reduce((s,p)=>s+p[axis],0)/3);
+          const diffuse=Math.max(0,V.dot(n,V.norm([.45,.9,.55]))),shade=command.unlit?1:.78+.08*n[1]+.19*diffuse;
+          const color=command.color.map(v=>Math.min(255,Math.round(v*255*shade)));
+          this.triangles.push({vertices,normal:n,center,color,command});
+        }
+      }
+      this.requestRender();
+    }
+    render() {
+      this.updateMatrices();const ctx=this.ctx,W=this.canvas.width,H=this.canvas.height;
+      if(!this.image||this.image.width!==W||this.image.height!==H){this.image=ctx.createImageData(W,H);this.zbuffer=new Float32Array(W*H);this.pixels32=new Uint32Array(this.image.data.buffer);}
+      const pixels=this.image.data,packed=this.pixels32,zbuffer=this.zbuffer;packed.fill(0);zbuffer.fill(Infinity);
+      const projection=p=>{const q=M.transform(this.vp,p);return {x:(q[0]/q[3]+1)*W/2,y:(1-q[1]/q[3])*H/2,z:q[2]/q[3],w:q[3]};};
+      const raster=(a,b,c,color,alpha=1)=>{
+        if(a.w<=.05||b.w<=.05||c.w<=.05)return;
+        const area=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);if(Math.abs(area)<.00001)return;
+        const x0=Math.max(0,Math.floor(Math.min(a.x,b.x,c.x))),x1=Math.min(W-1,Math.ceil(Math.max(a.x,b.x,c.x))),y0=Math.max(0,Math.floor(Math.min(a.y,b.y,c.y))),y1=Math.min(H-1,Math.ceil(Math.max(a.y,b.y,c.y)));
+        const A0=(b.y-c.y)/area,B0=(c.x-b.x)/area,C0=(b.x*c.y-c.x*b.y)/area,A1=(c.y-a.y)/area,B1=(a.x-c.x)/area,C1=(c.x*a.y-a.x*c.y)/area;
+        const zA=a.z-c.z,zB=b.z-c.z,packedColor=(255<<24)|(color[2]<<16)|(color[1]<<8)|color[0];
+        for(let y=y0;y<=y1;y++){
+          let w0=A0*(x0+.5)+B0*(y+.5)+C0,w1=A1*(x0+.5)+B1*(y+.5)+C1;
+          for(let x=x0;x<=x1;x++,w0+=A0,w1+=A1){if(w0<-.000001||w1<-.000001||w0+w1>1.000001)continue;const z=c.z+w0*zA+w1*zB,index=y*W+x;if(z>=zbuffer[index]+.0000001)continue;
+            if(alpha===1){zbuffer[index]=z;packed[index]=packedColor;}else{const offset=index*4;pixels[offset]=pixels[offset]*(1-alpha)+color[0]*alpha;pixels[offset+1]=pixels[offset+1]*(1-alpha)+color[1]*alpha;pixels[offset+2]=pixels[offset+2]*(1-alpha)+color[2]*alpha;pixels[offset+3]=255;}
+          }
+        }
+      };
+      for(const tri of this.triangles){if(!this.wallVisible(tri.command)||V.dot(tri.normal,V.sub(this.eye,tri.center))<=0)continue;const p=tri.vertices.map(projection);raster(p[0],p[1],p[2],tri.color);}
+      const seen=new Set();
+      for(const c of this.commands)if(c.instanceId&&!seen.has(c.instanceId)){
+        seen.add(c.instanceId);const angle=c.rotation*Math.PI/180,co=Math.cos(angle),si=Math.sin(angle),center=projection([c.origin[0],.012,c.origin[1]]);
+        for(const scale of [1.14,.94,.74]){const points=[];for(let j=0;j<28;j++){const a=j/28*Math.PI*2,xx=Math.cos(a)*c.footprint[0]*.54*scale,zz=Math.sin(a)*c.footprint[1]*.54*scale;points.push(projection([c.origin[0]+xx*co+zz*si,.012,c.origin[1]-xx*si+zz*co]));}for(let j=0;j<28;j++)raster(center,points[j],points[(j+1)%28],[54,79,108],.055);}
+      }
+      for(const line of this.lines){if(line.grid&&!this.showGrid)continue;const col=line.color.map(v=>Math.round(v*255)),value=(255<<24)|(col[2]<<16)|(col[1]<<8)|col[0];for(let i=0;i<line.points.length;i+=6){const a=projection(line.points.slice(i,i+3)),b=projection(line.points.slice(i+3,i+6));if(a.w<=0||b.w<=0)continue;const steps=Math.ceil(Math.max(Math.abs(b.x-a.x),Math.abs(b.y-a.y)));for(let j=0;j<=steps;j++){const t=j/(steps||1),x=Math.round(a.x+(b.x-a.x)*t),y=Math.round(a.y+(b.y-a.y)*t),z=a.z+(b.z-a.z)*t-.00001;if(x<0||x>=W||y<0||y>=H)continue;const index=y*W+x;if(z<zbuffer[index])packed[index]=value;}}}
+      ctx.putImageData(this.image,0,0);this.onRender?.();
+    }
+  }
+  for(const key of ['resize','updateMatrices','home','requestRender','wallVisible','ray','floorPoint','project','pick'])SoftwareRenderer.prototype[key]=Renderer.prototype[key];
+  window.Clinic3D={Renderer,SoftwareRenderer,M,V,hex};
+})();
+
+
+/* Demo catalogue: replace identifiers and verify dimensions before real use.
+ * Dimensions are illustrative metres, not manufacturer specifications.
+ * Prices are intentionally absent: final quotations belong to the sales team.
+ */
+(function () {
+  'use strict';
+  const catalogue = [
+    {id:'exam-table',name:'Examination table',category:'General examination',width:2.05,depth:.85,height:1.03,color:'#4f8edb',icon:'table',preferred:[-1.35,.15]},
+    {id:'exam-chair',name:'Examination chair',category:'Optometry',width:.98,depth:1.40,height:1.62,color:'#5c9bab',icon:'chair',preferred:[-1.25,.05]},
+    {id:'slit-lamp',name:'Slit lamp station',category:'Optometry',width:1.02,depth:.78,height:1.58,color:'#7a8cbb',icon:'lamp',preferred:[1.15,-.65]},
+    {id:'stool',name:'Clinician stool',category:'Seating',width:.62,depth:.62,height:.68,color:'#6b9bc8',icon:'stool',preferred:[.8,.95]},
+    {id:'cabinet',name:'Storage cabinet',category:'Storage',width:1.2,depth:.58,height:1.8,color:'#ac9c84',icon:'cabinet',preferred:[-1.8,-1.95]},
+    {id:'monitor',name:'Monitor cart',category:'Monitoring',width:.66,depth:.66,height:1.6,color:'#738ca9',icon:'monitor',preferred:[2,1.25]},
+
+    // EXAMPLE ONLY. Replace these records with verified catalogue products.
+    // Keep each real product ID separate, even when they share a modelType.
+    {
+      id: 'demo-chair-001',
+      name: 'Custom examination chair (example)',
+      category: 'Optometry',
+      modelType: 'exam-chair',
+      width: 1.0,
+      depth: 1.4,
+      height: 1.6,
+      color: '#537ec1',
+      icon: 'chair',
+      preferred: [0, 0]
+    },
+    {
+      id: 'demo-cart-001',
+      name: 'Custom equipment cart (box example)',
+      category: 'Other equipment',
+      modelType: 'box',
+      width: 0.8,
+      depth: 0.6,
+      height: 0.9,
+      color: '#c19153',
+      icon: 'cabinet',
+      preferred: [1.5, 0]
+    }
+  ];
+  // Validate hand-edited data before any UI or geometry is created.
+  const seen = new Set();
+  for (const product of catalogue) {
+    if (!/^[A-Za-z0-9_-]+$/.test(product.id) || seen.has(product.id)) {
+      throw new Error('Use a unique catalogue ID containing only letters, numbers, hyphens or underscores.');
+    }
+    seen.add(product.id);
+    if (typeof product.name !== 'string' || !product.name.trim()) {
+      throw new Error('Catalogue product names must be nonempty strings.');
+    }
+    for (const axis of ['width', 'depth', 'height']) {
+      if (!Number.isFinite(product[axis]) || product[axis] <= 0) {
+        throw new Error(product.id + ': ' + axis + ' must be a positive number in metres.');
+      }
+    }
+    if (!/^#[0-9a-fA-F]{6}$/.test(product.color || '')) product.color = '#738ca9';
+    if (!Array.isArray(product.preferred) || product.preferred.length !== 2 || !product.preferred.every(Number.isFinite)) product.preferred = [0, 0];
+  }
+  const presets = {
+    general: {name:'General examination',items:[{productId:'exam-table',quantity:1},{productId:'stool',quantity:1},{productId:'cabinet',quantity:1},{productId:'monitor',quantity:1}]},
+    optometry: {name:'Optometry — two-item demo',items:[{productId:'exam-chair',quantity:1},{productId:'slit-lamp',quantity:1}]},
+    empty: {name:'Empty room',items:[]}
+  };
+  const aliases={'exam_table':'exam-table','examination-table':'exam-table','exam_chair':'exam-chair','examination-chair':'exam-chair','slit_lamp':'slit-lamp'};
+  window.ClinicData={catalogue,presets,aliases};
+})();
+
+
+/* Procedural 3D equipment built from boxes and cylinders.
+ * Model parts use local coordinates; an instance supplies its group transform.
+ */
+(function () {
+  'use strict';
+  const {M,hex}=window.Clinic3D;
+  const white='#f3f6f8',metal='#a2b2bf',dark='#3e5267',blue='#659bd1',teal='#6fa9b3';
+  function model(id) {
+    const definition = window.ClinicData.catalogue.find(product => product.id === id);
+    if (!definition) throw new Error('No catalogue definition for: ' + id);
+    const type = definition.modelType || id;
+    const accent = definition.color || blue;
+    const parts=[];
+    const add=(shape,x,y,z,w,h,d,color,rx=0,ry=0,rz=0)=>parts.push({shape,matrix:M.compose([x,y,z],[w,h,d],[rx,ry,rz]),color:hex(color)});
+    const b=(x,y,z,w,h,d,color,rx=0,ry=0,rz=0)=>add('box',x,y,z,w,h,d,color,rx,ry,rz);
+    const c=(x,y,z,w,h,d,color,rx=0,ry=0,rz=0)=>add('cylinder',x,y,z,w,h,d,color,rx,ry,rz);
+    if(type==='exam-table') {
+      b(0,.12,0,1.62,.16,.58,dark);b(0,.44,0,1.64,.53,.64,white);b(0,.71,0,1.92,.07,.77,metal);
+      b(.21,.83,0,1.57,.18,.82,accent);b(-.78,.90,0,.49,.17,.82,accent,0,0,-.20);b(-.80,1.00,0,.31,.06,.53,'#dbe9f7',0,0,-.20);
+      for(const y of [.29,.46,.63]){b(.23,y,.327,.92,.014,.008,'#bdcbd5');b(.23,y+.06,.342,.25,.025,.027,metal);}
+      b(-.54,.43,.33,.012,.46,.012,'#bdcbd5');b(-.64,.56,.35,.025,.15,.024,metal);
+      b(.90,.36,0,.15,.05,.53,metal);
+    } else if(type==='exam-chair') {
+      c(0,.06,0,.86,.12,.86,dark);c(0,.34,0,.18,.48,.18,metal);b(0,.62,0,.62,.13,.61,white);
+      b(0,.74,.09,.72,.17,.70,accent);b(0,1.10,-.28,.72,.70,.16,accent,-.14);b(0,1.50,-.34,.44,.23,.15,accent,-.14);
+      for(const x of [-.425,.425]){b(x,.81,.10,.055,.32,.055,metal);b(x,.96,.05,.12,.10,.64,dark);}
+      b(0,.54,.48,.55,.12,.45,white,.4);b(0,.39,.60,.58,.08,.23,dark,.22);
+    } else if(type==='slit-lamp') {
+      c(0,.05,0,.70,.10,.63,dark);c(0,.39,0,.13,.67,.13,metal);b(0,.80,0,1.02,.09,.72,white);
+      b(-.12,.88,.05,.43,.08,.31,metal);c(-.10,1.08,.03,.10,.34,.10,white);b(-.10,1.27,.03,.18,.25,.19,white);
+      for(const x of [-.17,-.03]){c(x,1.29,.19,.095,.22,.095,dark,Math.PI/2);c(x,1.29,.31,.11,.05,.11,'#394a62',Math.PI/2);}
+      c(.17,1.17,-.13,.065,.56,.065,metal);b(.17,1.47,-.13,.16,.14,.19,dark);
+      for(const x of [-.34,.34])c(x,1.16,-.25,.035,.65,.035,metal);
+      b(0,1.47,-.25,.70,.055,.085,white);b(0,1.03,-.25,.23,.065,.15,accent);c(-.32,.94,.20,.055,.11,.055,dark);
+    } else if(type==='stool') {
+      c(0,.62,0,.43,.12,.43,accent);c(0,.34,0,.065,.46,.065,metal);c(0,.095,0,.12,.11,.12,dark);
+      for(let i=0;i<5;i++){const a=i*Math.PI*2/5;b(Math.sin(a)*.12,.08,Math.cos(a)*.12,.055,.045,.28,metal,0,a);c(Math.sin(a)*.255,.045,Math.cos(a)*.255,.08,.08,.08,dark);}
+    } else if(type==='cabinet') {
+      b(0,.08,0,1.12,.16,.49,dark);b(0,.51,0,1.20,.76,.54,white);b(0,.91,0,1.22,.06,.58,'#bfae91');
+      b(0,1.40,-.06,1.16,.79,.43,white);b(-.29,1.43,.162,.51,.66,.02,'#bdcdd7');b(.29,1.43,.162,.51,.66,.02,'#bdcdd7');
+      for(const x of [-.06,.06])b(x,1.42,.185,.025,.20,.025,metal);
+      for(const y of [.30,.55,.78]){b(0,y,.276,1.12,.011,.012,'#c0cdd6');b(0,y+.06,.295,.28,.022,.03,metal);}
+    } else if(type==='monitor') {
+      for(const x of [-.23,.23])for(const z of [-.23,.23])c(x,.06,z,.09,.12,.09,dark);
+      b(0,.18,0,.62,.10,.56,white);c(0,.70,0,.07,1.04,.07,metal);b(0,.75,0,.52,.06,.45,white);
+      b(0,1.30,0,.60,.43,.10,dark);b(0,1.31,.058,.53,.34,.015,'#152e47');b(0,1.04,.07,.39,.06,.30,metal);
+      b(-.08,1.37,.069,.30,.009,.006,'#7ce3cc');b(-.09,1.29,.069,.28,.009,.006,'#80c7ee');
+      b(.18,1.39,.069,.06,.028,.008,'#7ce3cc');b(.18,1.29,.069,.06,.028,.008,'#80c7ee');
+      b(-.12,1.39,.071,.008,.06,.008,'#7ce3cc');b(-.105,1.34,.071,.008,.05,.008,'#7ce3cc');
+    } else {
+      // A new product without a known template remains visible as a sized box.
+      b(0, definition.height / 2, 0, definition.width, definition.height, definition.depth, accent);
+    }
+
+    // Custom products reuse approximate geometry, scaled to their stated envelope.
+    // This is not a manufacturer CAD model or a fit/safety certification.
+    if (definition.modelType && type !== 'box' && parts.length) {
+      const low = [Infinity, Infinity, Infinity];
+      const high = [-Infinity, -Infinity, -Infinity];
+      for (const part of parts) {
+        for (const x of [-0.5, 0.5]) for (const y of [-0.5, 0.5]) for (const z of [-0.5, 0.5]) {
+          const point = M.transform(part.matrix, [x, y, z, 1]);
+          for (let axis = 0; axis < 3; axis++) {
+            low[axis] = Math.min(low[axis], point[axis]);
+            high[axis] = Math.max(high[axis], point[axis]);
+          }
+        }
+      }
+      const fit = M.multiply(
+        M.scale(definition.width / (high[0] - low[0]), definition.height / (high[1] - low[1]), definition.depth / (high[2] - low[2])),
+        M.translate(-(low[0] + high[0]) / 2, -low[1], -(low[2] + high[2]) / 2)
+      );
+      for (const part of parts) part.matrix = M.multiply(fit, part.matrix);
+    }
+    return parts;
+  }
+  const cache=new Map();
+  function buildScene(state,selected,conflicts) {
+    const {width:w,depth:d}=state.room,commands=[],lines=[];
+    const push=(shape,pos,size,col,extra={})=>commands.push({shape,matrix:M.compose(pos,size),color:hex(col),...extra});
+    push('box',[0,-.12,0],[w+.22,.24,d+.22],'#c3cedb');push('box',[0,-.025,0],[w,.05,d],'#edf3f7');
+    const wallH=2.65;
+    push('box',[0,wallH/2,-d/2-.06],[w+.24,wallH,.12],'#dce6ef',{wall:'back'});
+    push('box',[-w/2-.06,wallH/2,0],[.12,wallH,d],'#edf1f6',{wall:'left'});
+    push('box',[0,.09,-d/2+.025],[w,.18,.05],'#aabacb',{wall:'back'});
+    push('box',[-w/2+.025,.09,0],[.05,.18,d],'#bdcbd7',{wall:'left'});
+    push('box',[0,wallH,-d/2-.06],[w+.24,.06,.15],'#f8fbfd',{wall:'back'});
+    push('box',[-w/2-.06,wallH,0],[.15,.06,d],'#f8fbfd',{wall:'left'});
+    const wx=Math.min(.6,w/2-1);
+    push('box',[wx,1.85,-d/2+.04],[1.6,1.05,.08],'#ffffff',{wall:'back'});
+    push('box',[wx,1.85,-d/2+.09],[1.45,.90,.025],'#b2d5e8',{wall:'back',unlit:true});
+    push('box',[wx,1.85,-d/2+.115],[.045,.92,.025],'#f5fafc',{wall:'back'});
+    push('box',[wx,1.85,-d/2+.115],[1.45,.035,.025],'#f5fafc',{wall:'back'});
+    if(w>4){push('box',[-w/2+.85,1.9,-d/2+.04],[.55,.55,.06],'#f8fafc',{wall:'back'});push('box',[-w/2+.85,1.9,-d/2+.08],[.27,.075,.02],'#6194c9',{wall:'back'});push('box',[-w/2+.85,1.9,-d/2+.08],[.075,.27,.02],'#6194c9',{wall:'back'});}
+    const grid=[];
+    for(let x=-w/2+.5;x<w/2;x+=.5)grid.push(x,.008,-d/2,x,.008,d/2);
+    for(let z=-d/2+.5;z<d/2;z+=.5)grid.push(-w/2,.008,z,w/2,.008,z);
+    lines.push({points:grid,color:hex('#d8e3ec'),grid:true});
+    const dim=[-w/2,.015,d/2+.35,w/2,.015,d/2+.35,-w/2,.015,d/2+.22,-w/2,.015,d/2+.47,w/2,.015,d/2+.22,w/2,.015,d/2+.47,w/2+.35,.015,-d/2,w/2+.35,.015,d/2,w/2+.22,.015,-d/2,w/2+.47,.015,-d/2,w/2+.22,.015,d/2,w/2+.47,.015,d/2];
+    lines.push({points:dim,color:hex('#99aabe')});
+    for(const item of state.instances) {
+      if(!cache.has(item.productId))cache.set(item.productId,model(item.productId));
+      const root=M.multiply(M.translate(item.x,0,item.z),M.ry(item.rotation*Math.PI/180));
+      const defForShadow=ClinicData.catalogue.find(p=>p.id===item.productId);
+      for(const part of cache.get(item.productId))commands.push({...part,matrix:M.multiply(root,part.matrix),instanceId:item.instanceId,footprint:[defForShadow.width,defForShadow.depth],origin:[item.x,item.z],rotation:item.rotation});
+      if(item.instanceId===selected||conflicts.has(item.instanceId)){
+        const def=ClinicData.catalogue.find(p=>p.id===item.productId),pad=.07,ww=def.width/2+pad,dd=def.depth/2+pad;
+        const corners=[[-ww,.02,-dd],[ww,.02,-dd],[ww,.02,dd],[-ww,.02,dd]].map(p=>M.transform(root,p).slice(0,3)),pts=[];
+        for(let i=0;i<4;i++)pts.push(...corners[i],...corners[(i+1)%4]);
+        lines.push({points:pts,color:hex(conflicts.has(item.instanceId)?'#d68130':'#2675df')});
+      }
+    }
+    return {commands,lines};
+  }
+  window.ClinicModels={buildScene};
+})();
+
+
+/* Single source of truth for the room, quantities and positions.
+ * No DOM or rendering code here. All incoming catalogue choices are validated.
+ */
+(function () {
+  'use strict';
+  const {catalogue,aliases}=ClinicData;
+  const clone=v=>JSON.parse(JSON.stringify(v));
+  const round=v=>Math.round(v*1000)/1000;
+  const getDef=id=>catalogue.find(p=>p.id===id);
+  function normalize(items) {
+    if(!Array.isArray(items)||items.length>catalogue.length)throw new Error('Provide an equipment array with at most '+catalogue.length+' product types.');
+    const seen=new Set();let total=0;
+    const result=items.map(row=>{if(!row||typeof row!=='object')throw new Error('Each equipment entry must be an object.');const raw=row.productId??row.id,id=aliases[raw]||raw;
+      if(!getDef(id))throw new Error('Unknown product ID: '+String(raw)+'. Map real catalogue IDs to supported models first.');
+      if(seen.has(id))throw new Error('Duplicate product ID: '+id);seen.add(id);
+      if(!Number.isInteger(row.quantity)||row.quantity<0||row.quantity>8)throw new Error('Quantity must be a whole number from 0 to 8.');total+=row.quantity;return {productId:id,quantity:row.quantity};});
+    if(total>24)throw new Error('This demo supports at most 24 equipment instances in one room.');
+    return result.filter(r=>r.quantity>0);
+  }
+  function dimensions(item){const p=getDef(item.productId),swap=Math.round(item.rotation/90)%2;return swap?{width:p.depth,depth:p.width}:{width:p.width,depth:p.depth};}
+  function clampItem(item,room){const s=dimensions(item),mx=Math.max(0,(room.width-s.width)/2-.06),mz=Math.max(0,(room.depth-s.depth)/2-.06);item.x=round(Math.max(-mx,Math.min(mx,item.x)));item.z=round(Math.max(-mz,Math.min(mz,item.z)));}
+  function overlaps(a,b,padding=0){const aa=dimensions(a),bb=dimensions(b);return Math.abs(a.x-b.x)<(aa.width+bb.width)/2+padding-.001 && Math.abs(a.z-b.z)<(aa.depth+bb.depth)/2+padding-.001;}
+  function findSpot(item,others,room){const def=getDef(item.productId);item.x=def.preferred[0];item.z=def.preferred[1];clampItem(item,room);if(!others.some(o=>overlaps(item,o,.13)))return;
+    const s=dimensions(item),sx=-room.width/2+s.width/2+.15,sz=-room.depth/2+s.depth/2+.15;
+    for(let z=sz;z<=room.depth/2-s.depth/2-.10;z+=.25)for(let x=sx;x<=room.width/2-s.width/2-.10;x+=.25){item.x=round(x);item.z=round(z);if(!others.some(o=>overlaps(item,o,.13)))return;}
+    item.x=0;item.z=0;clampItem(item,room);
+  }
+  class Store {
+    constructor(){this.state={room:{width:6,depth:5,unit:'m'},instances:[],nextId:1};this.history=[];}
+    remember(){this.history.push(clone(this.state));if(this.history.length>30)this.history.shift();}
+    snapshot(){return clone(this.state);}
+    updateEquipment(input,record=true){const items=normalize(input);if(record)this.remember();const retained=[];
+      for(const row of items){const old=this.state.instances.filter(i=>i.productId===row.productId).slice(0,row.quantity);retained.push(...old);}
+      for(const row of items){let n=retained.filter(i=>i.productId===row.productId).length;while(n<row.quantity){const item={instanceId:'equipment-'+this.state.nextId++,productId:row.productId,x:0,z:0,rotation:0};findSpot(item,retained,this.state.room);retained.push(item);n++;}}
+      this.state.instances=retained;return this.snapshot();
+    }
+    quantities(){return catalogue.map(p=>({productId:p.id,quantity:this.state.instances.filter(i=>i.productId===p.id).length})).filter(i=>i.quantity>0);}
+    setRoom(width,depth,record=true){if(typeof width!=='number'||typeof depth!=='number'||!Number.isFinite(width)||!Number.isFinite(depth)||width<3||width>14||depth<3||depth>14)throw new Error('Room width and depth must each be between 3 and 14 metres.');if(record)this.remember();this.state.room={width:round(width),depth:round(depth),unit:'m'};for(const i of this.state.instances)clampItem(i,this.state.room);}
+    move(id,x,z,record=true){if(!Number.isFinite(x)||!Number.isFinite(z))throw new Error('Coordinates must be numbers.');const item=this.state.instances.find(i=>i.instanceId===id);if(!item)return false;if(record)this.remember();item.x=x;item.z=z;clampItem(item,this.state.room);return true;}
+    rotate(id,record=true){const i=this.state.instances.find(v=>v.instanceId===id);if(!i)return false;if(record)this.remember();i.rotation=(i.rotation+90)%360;clampItem(i,this.state.room);return true;}
+    remove(id){const i=this.state.instances.findIndex(v=>v.instanceId===id);if(i<0)return false;this.remember();this.state.instances.splice(i,1);return true;}
+    autoArrange(){this.remember();const placed=[];for(const item of [...this.state.instances].sort((a,b)=>{const aa=dimensions(a),bb=dimensions(b);return bb.width*bb.depth-aa.width*aa.depth;})){findSpot(item,placed,this.state.room);placed.push(item);}}
+    undo(){if(!this.history.length)return false;this.state=this.history.pop();return true;}
+    conflicts(){const ids=new Set(),pairs=[];const a=this.state.instances;for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)if(overlaps(a[i],a[j])){ids.add(a[i].instanceId);ids.add(a[j].instanceId);pairs.push([a[i].instanceId,a[j].instanceId]);}return {ids,pairs};}
+    export(){return {schemaVersion:1,application:'Clinic.exe Room Studio',units:'metres',room:clone(this.state.room),selectedItems:this.quantities(),layout:clone(this.state.instances),notice:'Illustrative models and dimensions only. Not a construction, accessibility, clearance or clinical-safety assessment. No prices or quote submission included.'};}
+    import(data){if(!data||data.schemaVersion!==1||!Array.isArray(data.layout)||data.layout.length>24)throw new Error('Invalid layout file. Use JSON exported by this planner.');
+      const room=data.room;if(!room||room.unit!=='m'||![room.width,room.depth].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=3&&v<=14))throw new Error('Invalid room dimensions or units.');
+      const ids=new Set();const instances=data.layout.map(row=>{if(!row||!getDef(row.productId)||typeof row.instanceId!=='string'||!/^equipment-\d+$/.test(row.instanceId)||ids.has(row.instanceId))throw new Error('Invalid or duplicate equipment instance.');ids.add(row.instanceId);if(![row.x,row.z,row.rotation].every(v=>typeof v==='number'&&Number.isFinite(v))||![0,90,180,270].includes(row.rotation))throw new Error('Invalid equipment coordinates or rotation.');const item={instanceId:row.instanceId,productId:row.productId,x:row.x,z:row.z,rotation:row.rotation};clampItem(item,room);return item;});
+      normalize(catalogue.map(p=>({productId:p.id,quantity:instances.filter(i=>i.productId===p.id).length})));
+      this.remember();this.state={room:{width:room.width,depth:room.depth,unit:'m'},instances,nextId:Math.max(0,...instances.map(i=>Number(i.instanceId.split('-')[1])))+1};
+    }
+  }
+  window.ClinicState={Store,normalize,dimensions,clampItem,overlaps};
+})();
+
+
+/* Multi-floor state. Catalogue products, purchase choices and room placements
+ * are deliberately separate. No DOM or networking is used in this module. */
+(function () {
+  'use strict';
+  const copy = value => JSON.parse(JSON.stringify(value));
+  const { catalogue } = ClinicData;
+  const LIMITS = Object.freeze({ floors: 8, roomsPerFloor: 12, rooms: 24, purchasePerProduct: 192, purchased: 384 });
+  const product = id => catalogue.find(p => p.id === id);
+  const fail = text => { throw new Error(text); };
+  const nameOf = value => {
+    if (typeof value !== 'string' || !value.trim() || value.trim().length > 80) fail('Names must contain 1–80 characters.');
+    return value.trim();
+  };
+  const idOf = value => {
+    if (typeof value !== 'string' || !/^[A-Za-z0-9_-]{1,80}$/.test(value)) fail('Invalid floor or room ID.');
+    return value;
+  };
+  function normalizePurchase(items) {
+    if (!Array.isArray(items) || items.length > catalogue.length) fail('Purchase selection must be an array of registered product IDs and quantities.');
+    const seen = new Set(); let total = 0;
+    const rows = items.map(item => {
+      if (!item || typeof item !== 'object' || !product(item.productId)) fail('Unknown purchase product ID: ' + String(item?.productId));
+      if (seen.has(item.productId)) fail('Duplicate purchase product ID: ' + item.productId);
+      seen.add(item.productId);
+      if (!Number.isInteger(item.quantity) || item.quantity < 0 || item.quantity > LIMITS.purchasePerProduct) fail('Purchase quantity must be a whole number from 0 to ' + LIMITS.purchasePerProduct + '.');
+      total += item.quantity;
+      return { productId: item.productId, quantity: item.quantity };
+    }).filter(item => item.quantity > 0);
+    if (total > LIMITS.purchased) fail('Maximum ' + LIMITS.purchased + ' selected items per building in this prototype.');
+    return rows;
+  }
+  function roomPlan(items = [], width = 6, depth = 5) {
+    const store = new ClinicState.Store();
+    store.setRoom(width, depth, false); store.updateEquipment(items, false);
+    return store.export();
+  }
+  function canonicalPlan(data) {
+    const store = new ClinicState.Store(); store.import(data); return store.export();
+  }
+  function roomRows(state) {
+    return state.floors.flatMap(floor => floor.rooms.map(room => ({ floor, room })));
+  }
+  function inventory(state) {
+    const placed = {};
+    for (const { room } of roomRows(state)) for (const item of room.plan.layout) placed[item.productId] = (placed[item.productId] || 0) + 1;
+    const selected = Object.fromEntries(state.purchaseSelection.map(item => [item.productId, item.quantity]));
+    return catalogue.map(item => ({ productId: item.id, name: item.name, selected: selected[item.id] || 0, placed: placed[item.id] || 0, unplaced: (selected[item.id] || 0) - (placed[item.id] || 0) }));
+  }
+  function checkAllocations(state) {
+    const over = inventory(state).find(item => item.unplaced < 0);
+    if (over) fail('Not enough selected ' + over.name + '. ' + over.placed + ' are placed, but only ' + over.selected + ' selected. Increase Purchase total first, or remove a placement from another room.');
+  }
+  function validate(data) {
+    if (!data || data.kind !== 'clinic-building' || data.schemaVersion !== 1 || data.units !== 'metres') fail('Use a building JSON exported by this version. A single-room export is not a building.');
+    if (!Array.isArray(data.floors) || data.floors.length < 1 || data.floors.length > LIMITS.floors) fail('A building needs 1–' + LIMITS.floors + ' floors.');
+    const floorIds = new Set(), roomIds = new Set();
+    const floors = data.floors.map(floor => {
+      const floorId = idOf(floor.floorId);
+      if (floorIds.has(floorId)) fail('Duplicate floor ID.'); floorIds.add(floorId);
+      if (!Array.isArray(floor.rooms) || floor.rooms.length < 1 || floor.rooms.length > LIMITS.roomsPerFloor) fail('Each floor needs 1–' + LIMITS.roomsPerFloor + ' rooms.');
+      return { floorId, name: nameOf(floor.name), rooms: floor.rooms.map(room => {
+        const roomId = idOf(room.roomId);
+        if (roomIds.has(roomId)) fail('Room IDs must be unique throughout the building.'); roomIds.add(roomId);
+        return { roomId, name: nameOf(room.name), plan: canonicalPlan(room.plan) };
+      }) };
+    });
+    if (roomIds.size > LIMITS.rooms) fail('Maximum ' + LIMITS.rooms + ' rooms in this prototype.');
+    const state = { kind: 'clinic-building', schemaVersion: 1, units: 'metres', name: nameOf(data.name), purchaseSelection: normalizePurchase(data.purchaseSelection), floors, active: copy(data.active || {}) };
+    const floor = floors.find(f => f.floorId === state.active.floorId);
+    if (!floor || !floor.rooms.some(r => r.roomId === state.active.roomId)) fail('Active floor and room do not exist.');
+    checkAllocations(state);
+    return state;
+  }
+  function demo() {
+    const ids = new Set(catalogue.map(p => p.id));
+    const available = rows => rows.filter(row => ids.has(row.productId));
+    return {
+      kind: 'clinic-building', schemaVersion: 1, units: 'metres', name: 'My Clinic',
+      purchaseSelection: available([
+        { productId: 'exam-chair', quantity: 3 }, { productId: 'slit-lamp', quantity: 1 },
+        { productId: 'stool', quantity: 2 }, { productId: 'exam-table', quantity: 1 },
+        { productId: 'cabinet', quantity: 1 }, { productId: 'demo-cart-001', quantity: 1 }
+      ]),
+      floors: [
+        { floorId: 'floor-1', name: 'Ground floor', rooms: [
+          { roomId: 'room-101', name: 'Exam Room 101', plan: roomPlan(available([{ productId: 'exam-chair', quantity: 1 }, { productId: 'slit-lamp', quantity: 1 }, { productId: 'stool', quantity: 1 }])) },
+          { roomId: 'room-102', name: 'Exam Room 102', plan: roomPlan(available([{ productId: 'exam-table', quantity: 1 }, { productId: 'cabinet', quantity: 1 }]), 5, 4) }
+        ] },
+        { floorId: 'floor-2', name: 'Second floor', rooms: [ { roomId: 'room-201', name: 'Exam Room 201', plan: roomPlan([], 6, 5) } ] }
+      ], active: { floorId: 'floor-1', roomId: 'room-101' }
+    };
+  }
+  class BuildingStore {
+    constructor(data = demo()) { this.state = validate(data); }
+    export() { return copy({ ...this.state, notice: 'Illustrative planning only. Not a building plan, safety assessment, inventory count or submitted quote. Purchase selection is separate from room placement. Catalogue definitions must match on import.' }); }
+    import(data) { const next = validate(data); this.state = next; return this.export(); }
+    rows() { return roomRows(this.state); }
+    getRoom(floorId = this.state.active.floorId, roomId = this.state.active.roomId) {
+      const floor = this.state.floors.find(f => f.floorId === floorId);
+      const room = floor?.rooms.find(r => r.roomId === roomId);
+      if (!room) fail('Unknown floor/room pair. Specify exact floorId and roomId.');
+      return { floor, room };
+    }
+    inventory() { return inventory(this.state); }
+    summary() { const rows = this.inventory(); return { floors: this.state.floors.length, rooms: this.rows().length, selected: rows.reduce((s, r) => s + r.selected, 0), placed: rows.reduce((s, r) => s + r.placed, 0), unplaced: rows.reduce((s, r) => s + r.unplaced, 0) }; }
+    selectRoom(floorId, roomId) { this.getRoom(floorId, roomId); this.state.active = { floorId, roomId }; return copy(this.getRoom().room.plan); }
+    setPurchaseSelection(items) { const next = { ...this.state, purchaseSelection: normalizePurchase(items) }; checkAllocations(next); this.state.purchaseSelection = next.purchaseSelection; return this.inventory(); }
+    setPurchaseQuantity(productId, quantity) { return this.setPurchaseSelection([...this.state.purchaseSelection.filter(r => r.productId !== productId), { productId, quantity }]); }
+    validateRoomPlan(floorId, roomId, plan) {
+      this.getRoom(floorId, roomId); const canonical = canonicalPlan(plan);
+      const next = copy(this.state);
+      next.floors.find(f => f.floorId === floorId).rooms.find(r => r.roomId === roomId).plan = canonical;
+      checkAllocations(next); return canonical;
+    }
+    commitRoomPlan(floorId, roomId, plan) { const canonical = this.validateRoomPlan(floorId, roomId, plan); this.getRoom(floorId, roomId).room.plan = canonical; return copy(canonical); }
+    updateRoomEquipment({ floorId, roomId, items }) {
+      if (!floorId || !roomId) fail('Room updates require both floorId and roomId.');
+      const { room } = this.getRoom(floorId, roomId), store = new ClinicState.Store();
+      store.import(room.plan); store.updateEquipment(items);
+      return this.commitRoomPlan(floorId, roomId, store.export());
+    }
+    nextId(prefix, ids) { let n = 1; while (ids.has(prefix + n)) n++; return prefix + n; }
+    addFloor(name) {
+      if (this.state.floors.length >= LIMITS.floors) fail('Maximum ' + LIMITS.floors + ' floors.');
+      if (this.rows().length >= LIMITS.rooms) fail('Maximum ' + LIMITS.rooms + ' rooms.');
+      const floorId = this.nextId('floor-', new Set(this.state.floors.map(f => f.floorId)));
+      const roomId = this.nextId('room-', new Set(this.rows().map(r => r.room.roomId)));
+      this.state.floors.push({ floorId, name: nameOf(name), rooms: [{ roomId, name: 'New room', plan: roomPlan() }] });
+      this.selectRoom(floorId, roomId); return { floorId, roomId };
+    }
+    addRoom(floorId, name) {
+      const floor = this.state.floors.find(f => f.floorId === floorId); if (!floor) fail('Unknown floor.');
+      if (floor.rooms.length >= LIMITS.roomsPerFloor || this.rows().length >= LIMITS.rooms) fail('This prototype has reached its room limit.');
+      const roomId = this.nextId('room-', new Set(this.rows().map(r => r.room.roomId)));
+      floor.rooms.push({ roomId, name: nameOf(name), plan: roomPlan() }); this.selectRoom(floorId, roomId); return { floorId, roomId };
+    }
+    renameFloor(floorId, name) { const floor = this.state.floors.find(f => f.floorId === floorId); if (!floor) fail('Unknown floor.'); floor.name = nameOf(name); }
+    renameRoom(floorId, roomId, name) { this.getRoom(floorId, roomId).room.name = nameOf(name); }
+    renameBuilding(name) { this.state.name = nameOf(name); }
+    removeRoom(floorId, roomId) {
+      const { floor } = this.getRoom(floorId, roomId);
+      if (floor.rooms.length === 1) fail('Keep at least one room per floor, or delete the entire floor.');
+      floor.rooms = floor.rooms.filter(r => r.roomId !== roomId);
+      if (this.state.active.roomId === roomId) this.selectRoom(floorId, floor.rooms[0].roomId);
+    }
+    removeFloor(floorId) {
+      if (this.state.floors.length === 1) fail('Keep at least one floor.');
+      if (!this.state.floors.some(f => f.floorId === floorId)) fail('Unknown floor.');
+      this.state.floors = this.state.floors.filter(f => f.floorId !== floorId);
+      if (this.state.active.floorId === floorId) { const first = this.state.floors[0]; this.selectRoom(first.floorId, first.rooms[0].roomId); }
+    }
+    transferEquipment({ fromFloorId, fromRoomId, instanceId, toFloorId, toRoomId }) {
+      if (fromRoomId === toRoomId) fail('Choose a different destination room.');
+      const source = this.getRoom(fromFloorId, fromRoomId), target = this.getRoom(toFloorId, toRoomId);
+      const item = source.room.plan.layout.find(i => i.instanceId === instanceId); if (!item) fail('Unknown source equipment instance.');
+      const next = copy(this.state), nextSource = next.floors.find(f => f.floorId === fromFloorId).rooms.find(r => r.roomId === fromRoomId), nextTarget = next.floors.find(f => f.floorId === toFloorId).rooms.find(r => r.roomId === toRoomId);
+      const srcStore = new ClinicState.Store(), dstStore = new ClinicState.Store();
+      srcStore.import(source.room.plan); dstStore.import(target.room.plan); srcStore.remove(instanceId);
+      const quantities = dstStore.quantities(), row = quantities.find(q => q.productId === item.productId);
+      if (row) row.quantity++; else quantities.push({ productId: item.productId, quantity: 1 });
+      dstStore.updateEquipment(quantities);
+      nextSource.plan = srcStore.export(); nextTarget.plan = dstStore.export();
+      this.state = validate(next); return copy(nextTarget.plan);
+    }
+  }
+  window.ClinicBuildingState = { BuildingStore, LIMITS, validate, demo, roomPlan, normalizePurchase };
+})();
+
+
+/* UI, pointer interaction and public integration API.
+ * The catalogue, JSON input, 3D geometry and exports use the same Store.
+ */
+(function () {
+  'use strict';
+  const paths={
+    logo:'<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor" stroke="none"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',check:'<path d="m5 12 4 4L19 6"/>',
+    cube:'<path d="m12 3 9 5v8l-9 5-9-5V8l9-5zM3 8l9 5 9-5M12 13v8M7.5 5.5l9 5"/>',
+    grid:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h18M10 3v18"/>',
+    code:'<path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/>',
+    upload:'<path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/>',undo:'<path d="M4 10h10a6 6 0 0 1 0 12M4 10l5-5M4 10l5 5" transform="translate(0 -3)"/>',
+    frame:'<path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/>',move:'<path d="M12 2v20M2 12h20M8 6l4-4 4 4M8 18l4 4 4-4M6 8l-4 4 4 4m12-8 4 4-4 4"/>',
+    orbit:'<ellipse cx="12" cy="12" rx="9" ry="5" transform="rotate(-35 12 12)"/><circle cx="12" cy="12" r="2"/><path d="m19 4 2 4-5-1"/>',zoom:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M10 7v6M7 10h6"/>',
+    rotate:'<path d="M20 8a8 8 0 1 0 1 7M20 3v5h-5"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M15 4H5a1 1 0 0 0-1 1v10"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+    camera:'<path d="M3 7h5l2-3h4l2 3h5v13H3z"/><circle cx="12" cy="13" r="4"/>',spark:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2z"/>',
+    close:'<path d="m6 6 12 12M6 18 18 6"/>',cursor:'<path d="m4 3 5 17 4-7 7-4L4 3z"/>',
+    table:'<path d="M3 10h18v5H3zM5 15v5m14-5v5M4 7h6l2 3M5 18h14"/><path d="M4 10V7"/>',
+    chair:'<path d="M8 4h8v9H8zM6 13h12v4H6zM12 17v4M7 21h10M4 11v4m16-4v4"/>',
+    lamp:'<path d="M3 13h18v3H3zM12 16v5M8 21h8M9 13V6h5v4H9M7 6V3h6v3M16 5v8M16 5h3v2"/>',
+    stool:'<ellipse cx="12" cy="8" rx="7" ry="3"/><path d="M5 8v3c0 4 14 4 14 0V8M12 14v7M5 21l7-3 7 3"/>',
+    cabinet:'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M4 12h16M12 3v9M8 7v2m8-2v2M4 16h16M10 14h4m-4 4h4"/>',
+    monitor:'<rect x="4" y="3" width="16" height="12" rx="2"/><path d="M12 15v5M7 21h10M6 9h3l2-3 2 6 2-3h3"/>'
+  };
+  const icon=n=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[n]||paths.cube)+'</svg>';
+  document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
+  const $=id=>document.getElementById(id),store=new ClinicState.Store(),{catalogue,presets}=ClinicData;
+  const escapeHTML = value => String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+  const buildingMode=!!window.CLINIC_BUILDING_MODE;
+  const embed=buildingMode||new URLSearchParams(location.search).has('embed');if(embed&&!buildingMode)document.body.classList.add('embed');
+  let changeValidator=null,lastAcceptedPlan=null,lastRejection='';
+  let selected=null,renderer=null,pointer=null,pinch=null,toastTimer=null,topView=false,saveTimer=null;
+  const touchPoints=new Map(),STORAGE_KEY='clinic-exe-room-studio-v1';
+  function toast(message,error=false){$('toast').textContent=message;$('toast').classList.toggle('error',error);$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3600);}
+  function safe(fn){try{return fn();}catch(error){toast(error.message,true);refresh();return null;}}
+  const getSelected=()=>store.state.instances.find(i=>i.instanceId===selected);
+  const defOf=item=>catalogue.find(p=>p.id===item.productId);
+  function parentMessage(type,detail={}){if(buildingMode||window.parent===window)return;const origin=location.origin==='null'?'*':location.origin;window.parent.postMessage({type,...detail},origin);}
+  function persist(){if(embed)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(store.export()));$('save-text').textContent='Saved on this device';}catch(_){$('save-text').textContent='Session only · export to save';}},120);}
+  function notify(source){const plan=store.export();window.dispatchEvent(new CustomEvent('clinic:selection-changed',{detail:{source,selectedItems:plan.selectedItems,plan}}));parentMessage('clinic:planner:change',{source,selectedItems:plan.selectedItems,plan});}
+  function changed(source='ui'){
+    try { if(changeValidator)changeValidator(store.export(),source); }
+    catch(error){lastRejection=error.message;if(lastAcceptedPlan){store.import(lastAcceptedPlan);store.history=[];}selected=null;refresh();toast(error.message,true);return false;}
+    lastAcceptedPlan=store.export();if(!getSelected())selected=null;refresh();persist();notify(source);return true;
+  }
+  function drawScene(){if(!renderer)return;const conflicts=store.conflicts(),scene=ClinicModels.buildScene(store.state,selected,conflicts.ids);renderer.setScene(scene.commands,scene.lines,store.state.room);}
+  function updateOverlay(){if(!renderer)return;const rect=$('stage').getBoundingClientRect();const position=(id,p)=>{const q=renderer.project(p),el=$(id);el.style.left=(q.x-rect.left)+'px';el.style.top=(q.y-rect.top)+'px';el.style.visibility=q.visible?'visible':'hidden';};const r=store.state.room;position('width-tag',[0,.01,r.depth/2+.51]);position('depth-tag',[r.width/2+.55,.01,0]);const item=getSelected();if(item){position('selected-label',[item.x,defOf(item).height+.25,item.z]);}}
+  function refresh(){
+    const state=store.state,items=store.quantities(),qty=Object.fromEntries(items.map(v=>[v.productId,v.quantity]));
+    for(const p of catalogue){const input=$('qty-'+p.id);if(input&&document.activeElement!==input)input.value=qty[p.id]||0;const card=$('card-'+p.id);if(card)card.classList.toggle('active',!!qty[p.id]);const minus=$('minus-'+p.id),plus=$('plus-'+p.id);if(minus)minus.disabled=!qty[p.id];if(plus)plus.disabled=(qty[p.id]||0)>=8||state.instances.length>=24;}
+    $('room-width').value=state.room.width;$('room-depth').value=state.room.depth;
+    const area=(state.room.width*state.room.depth).toFixed(1).replace(/\.0$/,'');$('area-badge').textContent=area;$('area-summary').textContent=area+' m²';$('count-badge').textContent=state.instances.length;$('items-summary').textContent=state.instances.length+' item'+(state.instances.length===1?'':'s');
+    $('width-tag').textContent=state.room.width.toFixed(1)+' m';$('depth-tag').textContent=state.room.depth.toFixed(1)+' m';
+    const item=getSelected();$('selection-empty').hidden=!!item;$('selection-panel').hidden=!item;$('selected-label').hidden=!item;
+    if(item){const def=defOf(item);$('selected-icon').innerHTML=icon(def.icon);$('selected-name').textContent=def.name;$('selected-label').textContent=def.name;$('selected-id').textContent=def.id+' · '+item.instanceId;$('selected-dimensions').textContent=def.width.toFixed(2)+' × '+def.depth.toFixed(2)+' m';$('position-x').value=item.x;$('position-z').value=item.z;$('rotation-value').textContent='Rotation: '+item.rotation+'°';$('duplicate-button').disabled=(qty[item.productId]||0)>=8||state.instances.length>=24;}
+    const conflict=store.conflicts();$('layout-status').classList.toggle('warning',conflict.pairs.length>0);$('status-title').textContent=conflict.pairs.length?conflict.pairs.length+' footprint overlap'+(conflict.pairs.length===1?'':'s'):'No footprint overlaps';$('status-description').textContent=conflict.pairs.length?'Move the amber-outlined items apart. This is an approximate bounding-box check, not a safety assessment.':'A geometric check only. Operational clearances are not assessed.';
+    $('undo-button').disabled=!store.history.length;drawScene();if(window.ClinicBuildingAfterRefresh)window.ClinicBuildingAfterRefresh();
+  }
+  function updateEquipment(items,source='api'){store.updateEquipment(items);$('preset').value='custom';if(!changed(source))throw new Error(lastRejection);return store.export();}
+  function quantity(id,value){const items=store.quantities().filter(p=>p.productId!==id);items.push({productId:id,quantity:value});store.updateEquipment(items);$('preset').value='custom';const found=store.state.instances.filter(i=>i.productId===id);if(found.length)selected=found[found.length-1].instanceId;changed();}
+  function applyPreset(name){if(!presets[name])return;store.updateEquipment(presets[name].items);selected=store.state.instances[0]?.instanceId||null;changed('preset');toast(presets[name].name+' loaded. Demo choices, not clinical recommendations.');}
+  function select(id){selected=id;refresh();}
+  function rotate(){if(!getSelected())return;store.rotate(selected);changed();}
+  function remove(){if(!getSelected())return;const name=defOf(getSelected()).name;store.remove(selected);selected=null;$('preset').value='custom';changed();toast(name+' removed. Equipment list updated.');}
+  function download(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  $('catalogue-count').textContent = catalogue.length + ' ITEMS';
+  $('catalogue').innerHTML=catalogue.map(p=>'<div class="product-card" id="card-'+p.id+'"><div class="product-icon">'+icon(p.icon)+'</div><div><h3 class="product-name">'+escapeHTML(p.name)+'</h3><div class="product-meta">'+p.width.toFixed(2)+' × '+p.depth.toFixed(2)+' m · demo</div></div><div class="product-bottom"><span class="quote-tag">Quote required</span><div class="stepper"><button id="minus-'+p.id+'" aria-label="Remove one '+escapeHTML(p.name)+'">−</button><input id="qty-'+p.id+'" type="number" min="0" max="8" step="1" value="0" aria-label="'+escapeHTML(p.name)+' quantity"><button id="plus-'+p.id+'" aria-label="Add one '+escapeHTML(p.name)+'">+</button></div></div></div>').join('');
+  for(const p of catalogue){const count=()=>store.state.instances.filter(i=>i.productId===p.id).length;$('minus-'+p.id).onclick=()=>safe(()=>quantity(p.id,Math.max(0,count()-1)));$('plus-'+p.id).onclick=()=>safe(()=>quantity(p.id,count()+1));$('qty-'+p.id).onchange=e=>{const value=Number(e.target.value);safe(()=>quantity(p.id,value));e.target.value=count();};$('card-'+p.id).onclick=e=>{if(e.target.closest('button,input'))return;const item=store.state.instances.find(i=>i.productId===p.id);if(item)select(item.instanceId);};}
+  $('preset').onchange=e=>safe(()=>applyPreset(e.target.value));
+  function applyRoom(){safe(()=>{store.setRoom(Number($('room-width').value),Number($('room-depth').value));changed();renderer?.home(topView);toast('Room dimensions updated. Equipment kept inside the room.');});}
+  $('apply-room').onclick=applyRoom;for(const id of ['room-width','room-depth'])$(id).addEventListener('keydown',e=>{if(e.key==='Enter')applyRoom();});
+  $('rotate-button').onclick=rotate;$('remove-button').onclick=remove;
+  $('duplicate-button').onclick=()=>safe(()=>{const item=getSelected();if(item)quantity(item.productId,store.state.instances.filter(i=>i.productId===item.productId).length+1);});
+  for(const id of ['position-x','position-z'])$(id).onchange=()=>safe(()=>{if(!getSelected())return;store.move(selected,Number($('position-x').value),Number($('position-z').value));changed();});
+  $('undo-button').onclick=()=>{if(store.undo()){changed('undo');toast('Last layout change undone.');}};
+  $('arrange-button').onclick=()=>{store.autoArrange();changed();toast('Equipment rearranged. Check any remaining overlaps.');};
+  $('export-button').onclick=()=>{download('clinic-room-layout.json',new Blob([JSON.stringify(store.export(),null,2)],{type:'application/json'}));toast('Layout exported. This does not submit a quote.');};
+  $('import-button').onclick=()=>$('import-file').click();$('import-file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>500000)throw new Error('The layout file is too large. Maximum size: 500 KB.');const data=JSON.parse(await file.text());store.import(data);selected=null;$('preset').value='custom';changed('import');renderer?.home(topView);toast('Saved layout imported.');}catch(error){toast(error.message,true);}e.target.value='';};
+  $('snapshot-button').onclick=()=>{if(!renderer)return;renderer.render();$('room-canvas').toBlob(blob=>{if(blob){download('clinic-room-3d.png',blob);toast('3D view saved as PNG. Export JSON to keep the editable layout.');}},'image/png');};
+  $('integration-button').onclick=()=>$('integration-dialog').showModal();$('close-integration').onclick=()=>$('integration-dialog').close();
+  $('apply-json').onclick=()=>safe(()=>{const items=JSON.parse($('equipment-json').value);updateEquipment(items,'integration-test');$('integration-dialog').close();toast('Equipment choices applied to the live 3D room.');});
+  $('copy-api').onclick=async()=>{const text='window.ClinicPlanner.updateEquipment('+ $('equipment-json').value +');';try{await navigator.clipboard.writeText(text);toast('Integration example copied.');}catch(_){$('equipment-json').select();toast('Select and copy the equipment JSON; clipboard permission is unavailable.');}};
+  function setView(top){topView=top;$('view-3d').classList.toggle('active',!top);$('view-top').classList.toggle('active',top);renderer?.home(top);}
+  $('view-3d').onclick=()=>setView(false);$('view-top').onclick=()=>setView(true);$('fit-button').onclick=()=>renderer?.home(topView);
+  $('zoom-in').onclick=()=>{if(renderer){renderer.distance=Math.max(3,renderer.distance*.85);renderer.requestRender();}};$('zoom-out').onclick=()=>{if(renderer){renderer.distance=Math.min(60,renderer.distance/ .85);renderer.requestRender();}};
+  $('grid-toggle').onchange=e=>{if(renderer){renderer.showGrid=e.target.checked;renderer.requestRender();}};$('walls-toggle').onchange=e=>{if(renderer){renderer.showWalls=e.target.checked;renderer.requestRender();}};
+  store.updateEquipment(presets.general.items,false);store.history=[];
+  if(!embed){try{const saved=localStorage.getItem(STORAGE_KEY);if(saved){store.import(JSON.parse(saved));store.history=[];$('preset').value='custom';$('save-text').textContent='Restored from this device';}}catch(_){$('save-text').textContent='Session only · export to save';}}
+  selected=store.state.instances[0]?.instanceId||null;
+  try {renderer=new Clinic3D.Renderer($('room-canvas'));renderer.onRender=updateOverlay;refresh();renderer.home();if(renderer.mode==='software')document.querySelector('.live-pill').innerHTML='<span></span>3D · COMPATIBILITY';}catch(error){
+    // A WebGL driver or shader error must not strand the user on a blank page.
+    try {const oldCanvas=$('room-canvas'),fresh=oldCanvas.cloneNode(false);oldCanvas.replaceWith(fresh);renderer=new Clinic3D.SoftwareRenderer(fresh);renderer.onRender=updateOverlay;refresh();renderer.home();document.querySelector('.live-pill').innerHTML='<span></span>3D · COMPATIBILITY';}
+    catch(fallbackError){renderer=null;$('fatal').hidden=false;$('fatal-error').textContent=fallbackError.message;refresh();}
+  }
+  const canvas=$('room-canvas');
+  canvas.addEventListener('contextmenu',e=>e.preventDefault());
+  canvas.addEventListener('pointerdown',e=>{
+    if(!renderer)return;e.preventDefault();canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);touchPoints.set(e.pointerId,[e.clientX,e.clientY]);
+    if(touchPoints.size===2){const pts=[...touchPoints.values()];pinch={length:Math.hypot(pts[0][0]-pts[1][0],pts[0][1]-pts[1][1]),distance:renderer.distance};pointer=null;return;}
+    const hit=e.button===0&&!e.altKey?renderer.pick(e.clientX,e.clientY,store.state.instances,catalogue):null;
+    if(hit){selected=hit.instanceId;const point=renderer.floorPoint(e.clientX,e.clientY);pointer={id:e.pointerId,type:'item',startX:e.clientX,startY:e.clientY,offset:point?[hit.x-point[0],hit.z-point[2]]:[0,0],remembered:false};refresh();}
+    else {if(e.button===0)selected=null;pointer={id:e.pointerId,type:(e.button===2||e.shiftKey)?'pan':'orbit',x:e.clientX,y:e.clientY};refresh();}canvas.classList.add('dragging');
+  });
+  canvas.addEventListener('pointermove',e=>{
+    if(!renderer)return;
+    if(touchPoints.has(e.pointerId))touchPoints.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pinch&&touchPoints.size===2){const pts=[...touchPoints.values()],length=Math.hypot(pts[0][0]-pts[1][0],pts[0][1]-pts[1][1]);renderer.distance=Math.max(3,Math.min(60,pinch.distance*pinch.length/Math.max(length,1)));renderer.requestRender();return;}
+    if(!pointer||pointer.id!==e.pointerId)return;
+    if(pointer.type==='item'){
+      const item=getSelected(),point=renderer.floorPoint(e.clientX,e.clientY);if(!item||!point)return;if(Math.hypot(e.clientX-pointer.startX,e.clientY-pointer.startY)<3&&!pointer.remembered)return;
+      if(!pointer.remembered){store.remember();pointer.remembered=true;}
+      const snap=v=>$('snap-toggle').checked?Math.round(v*10)/10:v;
+      store.move(selected,snap(point[0]+pointer.offset[0]),snap(point[2]+pointer.offset[1]),false);refresh();
+    } else if(pointer.type==='orbit') {
+      const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;renderer.azimuth-=dx*.008;renderer.elevation=Math.max(.15,Math.min(1.565,renderer.elevation+dy*.006));pointer.x=e.clientX;pointer.y=e.clientY;topView=false;$('view-3d').classList.add('active');$('view-top').classList.remove('active');renderer.requestRender();
+    } else {const a=renderer.floorPoint(pointer.x,pointer.y),b=renderer.floorPoint(e.clientX,e.clientY);if(a&&b){renderer.target[0]=Math.max(-12,Math.min(12,renderer.target[0]+a[0]-b[0]));renderer.target[2]=Math.max(-12,Math.min(12,renderer.target[2]+a[2]-b[2]));}pointer.x=e.clientX;pointer.y=e.clientY;renderer.requestRender();}
+  });
+  function pointerUp(e){touchPoints.delete(e.pointerId);if(pointer?.remembered)changed('drag');if(pointer?.id===e.pointerId)pointer=null;if(touchPoints.size<2)pinch=null;canvas.classList.remove('dragging');if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);}
+  canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',pointerUp);
+  canvas.addEventListener('wheel',e=>{if(!renderer)return;e.preventDefault();renderer.distance=Math.max(3,Math.min(60,renderer.distance*Math.exp(e.deltaY*.001)));renderer.requestRender();},{passive:false});
+  canvas.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='r'){e.preventDefault();rotate();}else if(['Delete','Backspace'].includes(e.key)){e.preventDefault();remove();}else if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();$('undo-button').click();}else if(getSelected()&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const i=getSelected(),step=e.shiftKey?.5:.1;store.move(selected,i.x+(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0),i.z+(e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0));changed('keyboard');}});
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();$('fatal').hidden=false;$('fatal-error').textContent='The graphics context was lost. Export your layout, then refresh the page.';});
+  const api={
+    version:'2.0.0',
+    setChangeValidator:fn=>{if(typeof fn!=='function')throw new Error('Validator must be a function.');changeValidator=fn;lastAcceptedPlan=store.export();},
+    restoreRoom:data=>{store.import(data);store.history=[];selected=null;pointer=null;pinch=null;touchPoints.clear();lastAcceptedPlan=store.export();$('preset').value='custom';refresh();renderer?.home(topView);return store.export();},
+    refreshView:()=>refresh(),
+    getSelectedInstanceId:()=>selected,
+    updateEquipment:items=>updateEquipment(items,'api'),
+    setRoom:room=>{store.setRoom(room.width,room.depth);changed('api');renderer?.home(topView);return store.export();},
+    getState:()=>store.export(),
+    getCatalogue:()=>JSON.parse(JSON.stringify(catalogue)),
+    importLayout:data=>{store.import(data);selected=null;changed('api-import');renderer?.home(topView);return store.export();},
+    selectEquipment:id=>{if(!store.state.instances.some(i=>i.instanceId===id))throw new Error('Unknown equipment instance.');select(id);},
+    getScreenPosition:id=>{const i=store.state.instances.find(x=>x.instanceId===id);if(!i||!renderer)return null;return renderer.project([i.x,Math.min(defOf(i).height*.65,.85),i.z]);},
+    getDiagnostics:()=>({rendering:!!renderer,rendererMode:renderer?.mode||null,webgl:renderer?.gl?renderer.gl.getParameter(renderer.gl.VERSION):null,instances:store.state.instances.length,geometryParts:renderer?.commands.length||0,overlapPairs:store.conflicts().pairs.length,externalDependencies:0})
+  };
+  window.ClinicPlanner=Object.freeze(api);
+  window.updateRoom=api.updateEquipment;
+  window.addEventListener('message',event=>{
+    if(buildingMode||event.source!==window.parent||window.parent===window)return;
+    const sameOrigin=event.origin===location.origin,localFile=location.protocol==='file:'&&event.origin==='null';if(!sameOrigin&&!localFile)return;
+    if(!event.data||event.data.type!=='clinic:equipment:update')return;
+    try{updateEquipment(event.data.items,'parent');parentMessage('clinic:planner:updated',{requestId:event.data.requestId||null,plan:store.export()});}
+    catch(error){parentMessage('clinic:planner:error',{requestId:event.data.requestId||null,error:error.message});toast(error.message,true);}
+  });
+  if(!buildingMode)window.addEventListener('clinic:equipment-update',event=>safe(()=>updateEquipment(event.detail?.items,'event')));
+  parentMessage('clinic:planner:ready',{version:api.version});
+  window.dispatchEvent(new CustomEvent('clinic:planner-ready',{detail:{version:api.version}}));
+  persist();
+})();
+
+
+/* Building controller. The existing 3D viewer renders ONE active room.
+ * This module saves every accepted room change and routes scoped API updates. */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id), planner = window.ClinicPlanner;
+  const { BuildingStore, LIMITS } = ClinicBuildingState;
+  const STORAGE_KEY = 'clinic-exe-building-studio-v1';
+  const model = new BuildingStore(); let hydrating = false, toastTimer, nameAction = null, restored = false;
+  const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function toast(text, error = false) { $('building-toast').textContent = text; $('building-toast').className = 'building-toast show' + (error ? ' error' : ''); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('building-toast').classList.remove('show'), 5500); }
+  function safe(fn) { try { return fn(); } catch (error) { toast(error.message, true); render(); return null; } }
+  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(model.export())); $('save-text').textContent = 'Building saved on this device'; } catch (_) { $('save-text').textContent = 'Session only · export to save'; } }
+  function post(type, extra = {}) { if (window.parent === window) return; const target = location.origin === 'null' ? '*' : location.origin; parent.postMessage({ type, ...extra }, target); }
+  function publish(source) { const detail = { source, active: { ...model.state.active }, summary: model.summary(), building: model.export() }; window.dispatchEvent(new CustomEvent('clinic:building-changed', { detail })); post('clinic:building:changed', detail); }
+  function accepted(source) { render(); save(); publish(source); }
+  function loadActive() {
+    hydrating = true;
+    try { planner.restoreRoom(model.getRoom().room.plan); } finally { hydrating = false; }
+    render();
+  }
+  function chooseRoom(floorId, roomId) { model.selectRoom(floorId, roomId); loadActive(); accepted('select-room'); return model.export(); }
+  planner.setChangeValidator(plan => {
+    const { floorId, roomId } = model.state.active;
+    model.validateRoomPlan(floorId, roomId, plan);
+  });
+  window.addEventListener('clinic:selection-changed', event => {
+    if (hydrating) return;
+    const { floorId, roomId } = model.state.active;
+    model.commitRoomPlan(floorId, roomId, event.detail.plan);
+    accepted('room:' + event.detail.source);
+  });
+  function inventoryRefresh() {
+    for (const row of model.inventory()) {
+      const input = $('purchase-' + row.productId); if (input && document.activeElement !== input) input.value = row.selected;
+      const label = $('stock-' + row.productId); if (label) label.textContent = row.placed + ' placed in building · ' + row.unplaced + ' unplaced';
+      const minus = $('purchase-minus-' + row.productId); if (minus) minus.disabled = row.selected <= row.placed;
+      const plus = $('purchase-plus-' + row.productId); if (plus) plus.disabled = row.selected >= LIMITS.purchasePerProduct || model.summary().selected >= LIMITS.purchased;
+      const add = $('plus-' + row.productId);
+      if (add && row.unplaced <= 0) { add.disabled = true; add.title = 'Increase Purchase total to make another item available.'; } else if (add) add.title = 'Place one available item in this room';
+    }
+    const selectedId = planner.getSelectedInstanceId(), item = planner.getState().layout.find(i => i.instanceId === selectedId);
+    if (item) {
+      const stock = model.inventory().find(r => r.productId === item.productId);
+      if (stock?.unplaced <= 0) $('duplicate-button').disabled = true;
+    }
+  }
+  window.ClinicBuildingAfterRefresh = inventoryRefresh;
+  function render() {
+    const { floor, room } = model.getRoom(), s = model.summary();
+    $('building-name').textContent = model.state.name;
+    $('floor-select').replaceChildren(...model.state.floors.map(f => new Option(f.name, f.floorId)));
+    $('floor-select').value = floor.floorId;
+    $('room-select').replaceChildren(...floor.rooms.map(r => new Option(r.name, r.roomId)));
+    $('room-select').value = room.roomId;
+    $('building-summary').textContent = s.floors + ' floors · ' + s.rooms + ' rooms';
+    $('purchase-count').textContent = s.selected; $('placed-count').textContent = s.placed; $('unplaced-count').textContent = s.unplaced;
+    document.querySelector('.scene-heading h1').textContent = room.name;
+    document.querySelector('.scene-heading p').textContent = floor.name + ' · ' + room.roomId + ' · only this room is being edited';
+    $('scope-label').textContent = floor.name + ' / ' + room.name;
+    $('room-context-note').textContent = 'In room = ' + room.name + '. Purchase total applies to the whole building.';
+    $('add-floor').disabled = s.floors >= LIMITS.floors || s.rooms >= LIMITS.rooms;
+    $('add-room').disabled = floor.rooms.length >= LIMITS.roomsPerFloor || s.rooms >= LIMITS.rooms;
+    inventoryRefresh();
+    if ($('overview-dialog').open) renderOverview();
+  }
+  for (const p of ClinicData.catalogue) {
+    const bottom = $('card-' + p.id).querySelector('.product-bottom');
+    bottom.querySelector('.quote-tag').textContent = 'In this room';
+    const row = document.createElement('div'); row.className = 'purchase-row';
+    row.innerHTML = '<span>Purchase total</span><div class="stepper"><button id="purchase-minus-' + p.id + '" aria-label="Decrease purchase quantity for ' + esc(p.name) + '">−</button><input id="purchase-' + p.id + '" type="number" min="0" max="192" step="1" aria-label="Building purchase quantity for ' + esc(p.name) + '"><button id="purchase-plus-' + p.id + '" aria-label="Increase purchase quantity for ' + esc(p.name) + '">+</button></div>';
+    const stock = document.createElement('div'); stock.className = 'stock-note'; stock.id = 'stock-' + p.id;
+    $('card-' + p.id).append(row, stock);
+    const current = () => model.inventory().find(r => r.productId === p.id);
+    function setQuantity(n) { const previous = current().selected; model.setPurchaseQuantity(p.id, n); accepted('purchase'); planner.refreshView(); if (previous !== n) toast('Purchase quantity updated. Room placements have not changed.'); }
+    $('purchase-minus-' + p.id).onclick = () => safe(() => setQuantity(current().selected - 1));
+    $('purchase-plus-' + p.id).onclick = () => safe(() => setQuantity(current().selected + 1));
+    $('purchase-' + p.id).onchange = event => { safe(() => setQuantity(Number(event.target.value))); event.target.value = current().selected; };
+  }
+  function nameDialog(title, value, action) {
+    nameAction = action; $('name-title').textContent = title; $('name-input').value = value; $('name-error').textContent = '';
+    $('name-dialog').showModal(); $('name-input').focus(); $('name-input').select();
+  }
+  $('name-form').onsubmit = event => { event.preventDefault(); try { nameAction($('name-input').value); $('name-dialog').close(); loadActive(); accepted('structure'); } catch (error) { $('name-error').textContent = error.message; } };
+  $('name-cancel').onclick = () => $('name-dialog').close();
+  $('floor-select').onchange = event => safe(() => { const floor = model.state.floors.find(f => f.floorId === event.target.value); chooseRoom(floor.floorId, floor.rooms[0].roomId); });
+  $('room-select').onchange = event => safe(() => chooseRoom(model.state.active.floorId, event.target.value));
+  $('add-floor').onclick = () => nameDialog('Add a floor', 'New floor', name => model.addFloor(name));
+  $('add-room').onclick = () => nameDialog('Add a room', 'New examination room', name => model.addRoom(model.state.active.floorId, name));
+  $('edit-building-name').onclick = () => nameDialog('Rename building', model.state.name, name => model.renameBuilding(name));
+  $('rename-floor').onclick = () => nameDialog('Rename floor', model.getRoom().floor.name, name => model.renameFloor(model.state.active.floorId, name));
+  $('rename-room').onclick = () => nameDialog('Rename room', model.getRoom().room.name, name => model.renameRoom(model.state.active.floorId, model.state.active.roomId, name));
+  document.querySelector('.room-menu').addEventListener('click', event => { if (event.target.closest('button')) document.querySelector('.room-menu').open = false; });
+  $('delete-room').onclick = () => safe(() => { const { floor, room } = model.getRoom(); if (!confirm('Delete ' + room.name + '? Its equipment becomes unplaced. Purchase quantities stay unchanged.')) return; model.removeRoom(floor.floorId, room.roomId); loadActive(); accepted('delete-room'); });
+  $('delete-floor').onclick = () => safe(() => { const { floor } = model.getRoom(); if (!confirm('Delete ' + floor.name + ' and its ' + floor.rooms.length + ' room(s)? Equipment becomes unplaced; purchase quantities stay unchanged.')) return; model.removeFloor(floor.floorId); loadActive(); accepted('delete-floor'); });
+  function renderOverview() {
+    const s = model.summary();
+    $('overview-totals').textContent = s.selected + ' selected for purchase · ' + s.placed + ' placed · ' + s.unplaced + ' not yet placed';
+    $('floor-cards').innerHTML = model.state.floors.map(f => '<section class="floor-card"><h3>' + esc(f.name) + '<span>' + f.rooms.length + ' room' + (f.rooms.length === 1 ? '' : 's') + '</span></h3><div class="room-card-grid">' + f.rooms.map(r => '<button class="room-card' + (r.roomId === model.state.active.roomId ? ' current' : '') + '" data-floor="' + f.floorId + '" data-room="' + r.roomId + '"><strong>' + esc(r.name) + '</strong><span>' + r.plan.room.width + ' × ' + r.plan.room.depth + ' m · ' + r.plan.layout.length + ' items</span><small>' + esc(r.roomId) + ' → Edit room</small></button>').join('') + '</div></section>').join('');
+    $('inventory-body').innerHTML = model.inventory().filter(r => r.selected || r.placed).map(r => '<tr><th>' + esc(r.name) + '</th><td>' + r.selected + '</td><td>' + r.placed + '</td><td>' + r.unplaced + '</td></tr>').join('') || '<tr><td colspan="4">No equipment selected.</td></tr>';
+  }
+  $('overview-button').onclick = () => { renderOverview(); $('overview-dialog').showModal(); };
+  $('overview-close').onclick = () => $('overview-dialog').close();
+  $('floor-cards').onclick = event => { const button = event.target.closest('[data-room]'); if (!button) return; safe(() => chooseRoom(button.dataset.floor, button.dataset.room)); $('overview-dialog').close(); };
+  $('move-room-button').onclick = () => {
+    const plan = planner.getState(), selected = planner.getSelectedInstanceId();
+    if (!selected || !plan.layout.some(i => i.instanceId === selected)) return toast('First click the equipment you want to move in the 3D view.', true);
+    const targets = model.rows().filter(r => r.room.roomId !== model.state.active.roomId);
+    if (!targets.length) return toast('Create another room first.', true);
+    $('move-target').replaceChildren(...targets.map(({ floor, room }) => new Option(floor.name + ' → ' + room.name, floor.floorId + '/' + room.roomId)));
+    $('move-error').textContent = ''; $('move-dialog').showModal();
+  };
+  $('move-cancel').onclick = () => $('move-dialog').close();
+  $('move-form').onsubmit = event => { event.preventDefault(); try {
+    const [toFloorId, toRoomId] = $('move-target').value.split('/');
+    const { floorId, roomId } = model.state.active;
+    model.transferEquipment({ fromFloorId: floorId, fromRoomId: roomId, instanceId: planner.getSelectedInstanceId(), toFloorId, toRoomId });
+    $('move-dialog').close(); loadActive(); accepted('transfer'); toast('Moved to the destination room. Purchase total is unchanged.');
+  } catch (error) { $('move-error').textContent = error.message; } };
+  function download(name, text, type = 'application/json') { const url = URL.createObjectURL(new Blob([text], { type })), a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+  $('export-button').onclick = () => { download('clinic-building.json', JSON.stringify(model.export(), null, 2)); toast('All floors, rooms and purchase quantities exported. This does not submit a quote.'); };
+  $('import-button').onclick = () => $('building-file').click();
+  $('building-file').onchange = async event => { const file = event.target.files[0]; if (!file) return; try {
+    if (file.size > 2000000) throw new Error('Maximum building file size: 2 MB.');
+    const data = JSON.parse(await file.text());
+    const checked = ClinicBuildingState.validate(data);
+    if (!confirm('Replace the current building with this file? Export the current building first to keep a separate copy.')) return;
+    model.import(checked); loadActive(); accepted('import'); toast('Building imported. All rooms restored.');
+  } catch (error) { toast(error.message, true); } finally { event.target.value = ''; } };
+  $('quote-summary-button').onclick = () => {
+    const b = model.export(), lines = ['CLINIC.EXE — EQUIPMENT REQUEST DRAFT', b.name, '', 'Not submitted. No prices or customer contact information included.', 'Illustrative equipment. Supplier review required.', '', 'BUILDING PURCHASE SELECTION'];
+    for (const item of model.inventory().filter(r => r.selected)) lines.push(item.name + ' | ' + item.productId + ' | quantity ' + item.selected + ' | placed ' + item.placed + ' | unplaced ' + item.unplaced);
+    lines.push('', 'ROOM ALLOCATION');
+    for (const { floor, room } of model.rows()) { lines.push('', floor.name + ' / ' + room.name + ' [' + room.roomId + ']'); for (const item of room.plan.selectedItems) lines.push('  ' + item.productId + ' × ' + item.quantity); if (!room.plan.layout.length) lines.push('  No equipment placed.'); }
+    download('clinic-equipment-request-draft.txt', lines.join('\n'), 'text/plain');
+    toast('Request summary exported as a draft, not emailed or submitted.');
+  };
+  $('reset-building').onclick = () => { if (!confirm('Replace this building with the demonstration? Export first to keep your work.')) return; model.import(ClinicBuildingState.demo()); loadActive(); accepted('reset'); };
+  const api = Object.freeze({
+    version: '2.0.0',
+    getState: () => model.export(),
+    getCatalogue: () => planner.getCatalogue(),
+    getInventory: () => model.inventory(),
+    getDiagnostics: () => ({ ...planner.getDiagnostics(), ...model.summary(), active: { ...model.state.active } }),
+    selectRoom: ({ floorId, roomId }) => chooseRoom(floorId, roomId),
+    setPurchaseSelection: items => { model.setPurchaseSelection(items); planner.refreshView(); accepted('api-purchase'); return model.export(); },
+    updateRoomEquipment: input => { const plan = model.updateRoomEquipment(input); if (input.floorId === model.state.active.floorId && input.roomId === model.state.active.roomId) loadActive(); accepted('api-room'); return plan; },
+    addFloor: ({ name }) => { const result = model.addFloor(name); loadActive(); accepted('api-floor'); return result; },
+    addRoom: ({ floorId, name }) => { const result = model.addRoom(floorId, name); loadActive(); accepted('api-new-room'); return result; },
+    transferEquipment: input => { const result = model.transferEquipment(input); loadActive(); accepted('api-transfer'); return result; },
+    importBuilding: data => { model.import(data); loadActive(); accepted('api-import'); return model.export(); }
+  });
+  window.ClinicBuilding = api;
+  $('integration-button').onclick = () => { const a = model.state.active; $('building-api-json').value = JSON.stringify({ floorId: a.floorId, roomId: a.roomId, items: model.getRoom().room.plan.selectedItems }, null, 2); $('api-result').textContent = ''; $('building-api-dialog').showModal(); };
+  $('building-api-close').onclick = () => $('building-api-dialog').close();
+  $('building-api-apply').onclick = () => { try { const input = JSON.parse($('building-api-json').value); api.updateRoomEquipment(input); $('api-result').textContent = 'Applied to ' + input.floorId + ' / ' + input.roomId + '. Other rooms unchanged.'; $('api-result').className = 'success-text'; } catch (error) { $('api-result').textContent = error.message; $('api-result').className = 'error-text'; } };
+  window.addEventListener('message', event => {
+    if (window.parent === window || event.source !== parent) return;
+    const allowed = event.origin === location.origin || (location.protocol === 'file:' && event.origin === 'null');
+    if (!allowed || event.data?.type !== 'clinic:building:command') return;
+    const { action, payload, requestId } = event.data;
+    const commands = ['getState','getCatalogue','getInventory','selectRoom','setPurchaseSelection','updateRoomEquipment','transferEquipment'];
+    try { if (!commands.includes(action)) throw new Error('Unsupported building command.'); const result = api[action](payload); post('clinic:building:response', { requestId: typeof requestId === 'string' ? requestId.slice(0,120) : null, ok: true, result }); }
+    catch (error) { post('clinic:building:response', { requestId: typeof requestId === 'string' ? requestId.slice(0,120) : null, ok: false, error: error.message }); }
+  });
+  // Browser local storage is best-effort. Export JSON for a portable backup.
+  let saved = null;
+  try { saved = localStorage.getItem(STORAGE_KEY); } catch (_) { /* Storage may be blocked; exporting still works. */ }
+  if (saved) { try { model.import(JSON.parse(saved)); restored = true; } catch (_) { toast('The saved building could not be restored. Use an exported JSON backup; a demo is shown for now.', true); } }
+  loadActive(); save();
+  if (restored) toast('Building restored from this browser.');
+  post('clinic:building:ready', { version: api.version, active: { ...model.state.active } });
+  window.dispatchEvent(new CustomEvent('clinic:building-ready', { detail: { version: api.version } }));
+})();
+</script>
+</body>
+</html>
