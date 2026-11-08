@@ -1,11 +1,12 @@
 import os
 import json
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+from groq import Groq
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# ponytail: free tier is 8k tokens/min; retries absorb short bursts, paid tier if many users chat at once
+client = Groq(api_key=os.getenv("GROQ_API_KEY"), max_retries=4)
+MODEL = os.getenv("MODEL", "openai/gpt-oss-120b")
 
 CATALOG_FILE = "catalogue.js"  # same file the browser loads, so there is one catalogue
 
@@ -23,7 +24,7 @@ def chat_turn(message, current_list):
     """current_list is a dict: item id -> quantity, e.g. {"slit": 1}"""
     catalog = load_catalog()
     menu = [
-        {"id": i["id"], "name": i["name"], "short": i.get("short", ""), "tags": i.get("tags", [])}
+        {"id": i["id"], "name": i.get("short") or i["name"], "tags": i.get("tags", [])}
         for i in catalog.values()
     ]
     clinic_types = sorted({t for i in catalog.values() for t in i.get("tags", [])})
@@ -43,17 +44,17 @@ Reply with JSON only, in this shape:
 {{"reply": "your short message", "clinic_type": "matching supported clinic type or empty string", "actions": [{{"op": "add", "id": "item id", "qty": 1}}], "suggestions": ["short option", "short option"]}}
 op can be "add", "remove", or "set_qty".
 
-Catalogue: {json.dumps(menu)}
+Catalogue: {json.dumps(menu, separators=(",", ":"))}
 Current list (item id: quantity): {json.dumps(current_list)}
 User message: {message}"""
 
     try:
-        response = client.models.generate_content(
-            model=os.getenv("MODEL"),
-            contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
         )
-        data = json.loads(response.text)
+        data = json.loads(response.choices[0].message.content)
     except Exception as e:
         print("AI error:", e, flush=True)
         return current_list, "Sorry, I couldn't process that right now. Please try again.", [], ""
