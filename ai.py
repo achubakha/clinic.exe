@@ -6,10 +6,10 @@ from groq import Groq
 
 load_dotenv()
 # ponytail: free tier is 8k tokens/min; retries absorb short bursts, paid tier if many users chat at once
-client = Groq(api_key=os.getenv("GROQ_API_KEY"), max_retries=4)
+client = Groq(api_key=os.getenv("GROQ_API_KEY") or "missing-GROQ_API_KEY", max_retries=4)  # unset key: chat fails with a logged 401, site stays up
 MODEL = os.getenv("MODEL", "openai/gpt-oss-120b")
 
-CATALOG_FILE = "catalogue.js"  # same file the browser loads, so there is one catalogue
+CATALOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalogue.js")  # same file the browser loads, so there is one catalogue
 
 
 def load_catalog():

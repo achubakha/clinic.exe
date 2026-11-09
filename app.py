@@ -76,8 +76,8 @@ def quote():
     profile = {one_line(k, 40): one_line(v, 200) for k, v in list(profile.items())[:10]}
 
     ref = "CF-" + time.strftime("%Y%m%d-%H%M%S") + "-" + secrets.token_hex(2)
-    os.makedirs("quotes", exist_ok=True)
-    with open(f"quotes/{ref}.json", "w") as f:  # saved first, so nothing is lost if email fails
+    os.makedirs(QUOTES_DIR, exist_ok=True)
+    with open(os.path.join(QUOTES_DIR, f"{ref}.json"), "w") as f:  # saved first, so nothing is lost if email fails
         json.dump({"ref": ref, **contact, "notes": notes, "profile": profile,
                    "items": lines, "estimated_total": total}, f, indent=2)
 
@@ -109,6 +109,8 @@ def quote():
     return jsonify({"ref": ref, "emailed": emailed, "total": total})
 
 
+# Saved copies of requests. On Vercel only /tmp is writable (and it is wiped between runs, so the email is the record).
+QUOTES_DIR = os.getenv("QUOTES_DIR") or ("/tmp/quotes" if os.getenv("VERCEL") else "quotes")
 # Same order as the page groups the list in (CATEGORIES in index.js).
 CATEGORIES = ["Clinical Examination", "Medical Devices & Utilities", "Consumables & PPE", "IT & Administrative"]
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
