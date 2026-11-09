@@ -19,6 +19,13 @@ app = Flask(__name__)
 PUBLIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public")
 
 
+# The catalogue lives in data/ because Vercel leaves public/ out of the server's files, and the server needs it too.
+# The browser still loads it as js/catalogue.js (on Vercel that path isn't in public/, so it reaches this route).
+@app.route("/js/catalogue.js")
+def catalogue_js():
+    return send_from_directory(os.path.join(os.path.dirname(PUBLIC), "data"), "catalogue.js")
+
+
 @app.route("/")
 def home():
     return send_from_directory(PUBLIC, "index.html")
