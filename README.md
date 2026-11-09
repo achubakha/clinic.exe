@@ -7,7 +7,7 @@ quote request for the sales team, all from one conversation.
 |---|---|
 | **Source code** | https://github.com/achubakha/clinic.exe |
 | **Slides** | https://docs.google.com/presentation/d/1jXPcHtzHY57eCmKzD-BVRG9OVMNH3IJb/edit?slide=id.p4#slide=id.p4 |
-| **Demo video** | https://drive.google.com/file/d/1TcThVqyIrKoKGhQV35aaevt3mCt5jLOX/view?usp=drive_link |
+| **Demo video** |[ https://drive.google.com/file/d/1TcThVqyIrKoKGhQV35aaevt3mCt5jLOX/view?usp=drive_link](https://drive.google.com/file/d/1maK9_LXDUiYBauVWA5pD6J-2drwEk3A6/view) |
 
 ---
 
