@@ -14,15 +14,19 @@ from ai import chat_turn, load_catalog
 app = Flask(__name__)
 
 
+# Everything the browser loads lives in public/. Only that folder is served, so .env and the Python files never are.
+# (On Vercel, public/ is served straight from the CDN; these routes are for local runs.)
+PUBLIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public")
+
+
 @app.route("/")
 def home():
-    return send_from_directory(".", "clinic.html")
+    return send_from_directory(PUBLIC, "index.html")
 
 
-# Only these files are public -- never serve the whole folder (.env holds the API key).
-@app.route("/<any('catalogue.js','index.js','styles.css','3d.html','3d-engine.js','3d-app.js','hero.jpg'):name>")
+@app.route("/<path:name>")
 def static_file(name):
-    return send_from_directory(".", name)
+    return send_from_directory(PUBLIC, name)  # refuses paths outside public/
 
 
 @app.route("/api/catalog")
@@ -35,10 +39,6 @@ def chat():
     data = request.get_json()
     return jsonify(chat_turn(data.get("message", ""), data.get("list", {}),
                              data.get("profile"), data.get("last_reply", ""), data.get("rooms")))
-
-@app.route("/chat-test")
-def chat_test():
-    return send_from_directory(".", "chat_test.html")
 
 @app.route("/api/quote", methods=["POST"])
 def quote():

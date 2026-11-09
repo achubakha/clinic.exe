@@ -1,4 +1,4 @@
-"""Broken JSON from the model is retried once; other errors are not. Run: .venv/bin/python test_chat_retry.py"""
+"""Broken JSON from the model is retried once; other errors are not. Run from the project root: .venv/bin/python -m tests.test_chat_retry"""
 import json
 from types import SimpleNamespace as NS
 from unittest import mock

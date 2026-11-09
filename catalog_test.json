@@ -1,8 +1,0 @@
-[
-  {"id": "slit", "name": "Slit Lamp", "emoji": "🔬", "price": 2400, "description": "Examines the front of the eye", "tags": ["optometry"]},
-  {"id": "optchair", "name": "Optometry Exam Chair", "emoji": "🪑", "price": 3600, "description": "Patient chair for eye exams", "tags": ["optometry"]},
-  {"id": "examtable", "name": "Manual Exam Table", "emoji": "🛏️", "price": 1800, "description": "General exam table", "tags": ["family", "pediatric"]},
-  {"id": "ecg", "name": "ECG Machine", "emoji": "📈", "price": 4200, "description": "12-lead heart monitor", "tags": ["family"]},
-  {"id": "otoscope", "name": "Diagnostic Set (otoscope)", "emoji": "🩺", "price": 650, "description": "Wall-mounted otoscope and ophthalmoscope", "tags": ["family", "pediatric"]},
-  {"id": "autoclave", "name": "Autoclave Sterilizer", "emoji": "♨️", "price": 5200, "description": "Sterilizes instruments", "tags": ["family", "pediatric", "optometry"]}
-]

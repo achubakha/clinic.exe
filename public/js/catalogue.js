@@ -1,3 +1,4 @@
+// To use the real catalogue, replace these entries with the catalogue team's data (image: picture URL, link: Valuemed product page).
 
 // priority: 1 = essential, 2 = recommended, 3 = optional. per_room: quantity scales with number of rooms.
 // category: Clinical Examination | Medical Devices & Utilities | Consumables & PPE | IT & Administrative (the list is grouped in this order).

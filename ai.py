@@ -9,7 +9,7 @@ load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY") or "missing-GROQ_API_KEY", max_retries=4)  # unset key: chat fails with a logged 401, site stays up
 MODEL = os.getenv("MODEL", "openai/gpt-oss-120b")
 
-CATALOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalogue.js")  # same file the browser loads, so there is one catalogue
+CATALOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public", "js", "catalogue.js")  # same file the browser loads, so there is one catalogue
 
 
 def load_catalog():

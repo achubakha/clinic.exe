@@ -1,4 +1,4 @@
-"""Checks the "Submission" email flow with a fake mail server. Run: python3 test_quote.py"""
+"""Checks the "Submission" email flow with a fake mail server. Run from the project root: .venv/bin/python -m tests.test_quote"""
 import os
 import smtplib
 from unittest import mock
