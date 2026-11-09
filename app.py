@@ -14,15 +14,19 @@ from ai import chat_turn, load_catalog
 app = Flask(__name__)
 
 
+# Everything the browser loads lives in public/. Only that folder is served, so .env and the Python files never are.
+# (On Vercel, public/ is served straight from the CDN; these routes are for local runs.)
+PUBLIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public")
+
+
 @app.route("/")
 def home():
-    return send_from_directory(".", "clinic.html")
+    return send_from_directory(PUBLIC, "index.html")
 
 
-# Only these files are public -- never serve the whole folder (.env holds the API key).
-@app.route("/<any('catalogue.js','index.js','styles.css','3d.html','3d-engine.js','3d-app.js','hero.jpg'):name>")
+@app.route("/<path:name>")
 def static_file(name):
-    return send_from_directory(".", name)
+    return send_from_directory(PUBLIC, name)  # refuses paths outside public/
 
 
 @app.route("/api/catalog")
@@ -35,10 +39,6 @@ def chat():
     data = request.get_json()
     return jsonify(chat_turn(data.get("message", ""), data.get("list", {}),
                              data.get("profile"), data.get("last_reply", ""), data.get("rooms")))
-
-@app.route("/chat-test")
-def chat_test():
-    return send_from_directory(".", "chat_test.html")
 
 @app.route("/api/quote", methods=["POST"])
 def quote():
@@ -76,8 +76,8 @@ def quote():
     profile = {one_line(k, 40): one_line(v, 200) for k, v in list(profile.items())[:10]}
 
     ref = "CF-" + time.strftime("%Y%m%d-%H%M%S") + "-" + secrets.token_hex(2)
-    os.makedirs("quotes", exist_ok=True)
-    with open(f"quotes/{ref}.json", "w") as f:  # saved first, so nothing is lost if email fails
+    os.makedirs(QUOTES_DIR, exist_ok=True)
+    with open(os.path.join(QUOTES_DIR, f"{ref}.json"), "w") as f:  # saved first, so nothing is lost if email fails
         json.dump({"ref": ref, **contact, "notes": notes, "profile": profile,
                    "items": lines, "estimated_total": total}, f, indent=2)
 
@@ -109,6 +109,8 @@ def quote():
     return jsonify({"ref": ref, "emailed": emailed, "total": total})
 
 
+# Saved copies of requests. On Vercel only /tmp is writable (and it is wiped between runs, so the email is the record).
+QUOTES_DIR = os.getenv("QUOTES_DIR") or ("/tmp/quotes" if os.getenv("VERCEL") else "quotes")
 # Same order as the page groups the list in (CATEGORIES in index.js).
 CATEGORIES = ["Clinical Examination", "Medical Devices & Utilities", "Consumables & PPE", "IT & Administrative"]
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")

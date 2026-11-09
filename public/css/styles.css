@@ -330,7 +330,7 @@ body.landing-open{overflow:hidden}
 .landing.leaving{animation:landingOut .7s cubic-bezier(.7,0,.3,1) forwards;pointer-events:none}  /* lifts away like a curtain */
 @keyframes landingOut{to{transform:translateY(-100%)}}
 .hero{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;overflow:hidden;isolation:isolate}
-.hero-bg{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(8,10,14,.68) 0%,rgba(8,10,14,.6) 45%,rgba(8,10,14,.88) 100%),url(hero.jpg) center/cover;animation:heroZoom 26s ease-out both}
+.hero-bg{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(8,10,14,.68) 0%,rgba(8,10,14,.6) 45%,rgba(8,10,14,.88) 100%),url(../images/hero.jpg) center/cover;animation:heroZoom 26s ease-out both}
 @keyframes heroZoom{from{transform:scale(1.14)}to{transform:scale(1)}}
 .hero-top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px clamp(16px,3vw,40px)}
 .hero-brand .logo{background:#fff;color:var(--blue)}.hero-brand .brand-name{color:#fff}.hero-brand .brand-name span{color:#9db8ee}

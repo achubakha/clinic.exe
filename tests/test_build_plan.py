@@ -1,5 +1,5 @@
 """Checks the budget logic in build_plan against the real catalogue (no AI calls).
-Run: python3 test_build_plan.py"""
+Run from the project root: .venv/bin/python -m tests.test_build_plan"""
 from ai import build_plan, load_catalog
 
 cat = load_catalog()
