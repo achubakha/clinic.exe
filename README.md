@@ -134,4 +134,7 @@ Tests, run from the project root:
 
 ## Team
 
-_Add team members and roles._
+Anna Chubakha
+Qin Wang
+Samuel Olabode
+Tristan Ta
